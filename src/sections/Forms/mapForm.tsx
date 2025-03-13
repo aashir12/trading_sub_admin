@@ -13,22 +13,25 @@ import { firebaseController } from '../../utils/firebaseMiddleware'; // Adjust t
 // ----------------------------------------------------------------------
 
 export function MapForm() {
-  const [title, setTitle] = useState(''); // State for title
-  const [latitude, setLatitude] = useState(''); // State for latitude
+  const [date, setDate] = useState(''); // State for title
+  const [description, setDescription] = useState(''); // State for latitude
   const [longitude, setLongitude] = useState(''); // State for longitude
-  const [distance, setDistance] = useState('');
+  const [latitude, setLatitude] = useState('');
+  const [projectTitle, setProjectTitle] = useState('');
+  const [placeName, setPlaceName] = useState('');
+  const [slider, setSlider] = useState('');
   const [loading, setLoading] = useState(false); // Loading state
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    if (!title || !latitude || !longitude) {
+      if (!date || !description || !longitude || !projectTitle || !placeName || !slider) {
       alert('Please fill in all fields');
       return;
     }
 
     setLoading(true); // Set loading state
     try {
-      const docData = { title, latitude, longitude, distance };
+      const docData = { date, description, longitude, latitude, projectTitle, placeName, slider };
       await firebaseController.addMapEntry(docData); // Use controller to add entry
       alert('Entry successfully added!');
       fetchArchiveData(); // Fetch data after adding
@@ -56,34 +59,58 @@ export function MapForm() {
     >
       <TextField
         fullWidth
-        name="title"
-        label="Title"
-        value={title}
-        onChange={(e) => setTitle(e.target.value)}
+        name="date"
+        label="Date"
+        value={date}
+        onChange={(e) => setDate(e.target.value)}
         sx={{ mb: 3 }}
       />
       <TextField
         fullWidth
-        name="latitude"
-        label="latitude"
-        value={latitude}
-        onChange={(e) => setLatitude(e.target.value)}
+        name="description"
+        label="Description"
+        value={description}
+        onChange={(e) => setDescription(e.target.value)}
         sx={{ mb: 3 }}
       />
       <TextField
         fullWidth
         name="longitude"
-        label="longitude"
+        label="Longitude"
         value={longitude}
         onChange={(e) => setLongitude(e.target.value)}
         sx={{ mb: 3 }}
       />
       <TextField
         fullWidth
-        name="distance"
-        label="Distance"
-        value={distance}
-        onChange={(e) => setDistance(e.target.value)}
+        name="latitude"
+        label="Latitude"
+        value={latitude}
+        onChange={(e) => setLatitude(e.target.value)}
+        sx={{ mb: 3 }}
+      />
+      <TextField
+        fullWidth
+        name="projectTitle"
+        label="Project Title"
+        value={projectTitle}
+        onChange={(e) => setProjectTitle(e.target.value)}
+        sx={{ mb: 3 }}
+      />
+      <TextField
+        fullWidth
+        name="placeName"
+        label="Place Name"
+        value={placeName}
+        onChange={(e) => setPlaceName(e.target.value)}
+        sx={{ mb: 3 }}
+      />
+      <TextField
+        fullWidth
+        name="slider"
+        label="Slider"
+        value={slider}
+        onChange={(e) => setSlider(e.target.value)}
         sx={{ mb: 3 }}
       />
       <LoadingButton

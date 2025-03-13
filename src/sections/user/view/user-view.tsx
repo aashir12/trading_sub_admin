@@ -66,7 +66,7 @@ export function UserView() {
           startIcon={<Iconify icon="mingcute:add-line" />}
           href="/archive"
         >
-          New user
+          Add New
         </Button>
       </Box>
 

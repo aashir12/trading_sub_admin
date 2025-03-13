@@ -14,12 +14,9 @@ import { Iconify } from 'src/components/iconify';
 
 export type UserProps = {
   title: string;
-  imageUrl: string;
+  assets: string;
+  material: string;
   location: string;
-  Year: string;
-  supportedBy: string;
-  team: string;
-  lead: string;
 };
 
 type UserTableRowProps = {
@@ -52,10 +49,9 @@ export function UserTableRow({ row, selected, onSelectRow }: UserTableRowProps) 
           <Checkbox disableRipple checked={selected} onChange={onSelectRow} />
         </TableCell>
         <TableCell>{row.title}</TableCell>
-        <TableCell>{row.lead}</TableCell>
         <TableCell>{row.location}</TableCell>
-        <TableCell>{row.supportedBy}</TableCell>
-        <TableCell>{row.Year}</TableCell>
+        <TableCell>{row.assets}</TableCell>
+        <TableCell>{row.material}</TableCell>
         {/* 
         <TableCell>
           <Label color={(row.status === 'banned' && 'error') || 'success'}>

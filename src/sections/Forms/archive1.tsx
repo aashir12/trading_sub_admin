@@ -6,28 +6,25 @@ import TextField from '@mui/material/TextField';
 import Typography from '@mui/material/Typography';
 import LoadingButton from '@mui/lab/LoadingButton';
 
-import { firebaseController } from '../../utils/firebaseMiddleware'; // Adjust the path as necessary
+import { firebaseController } from '../../utils/firebaseMiddleware';
 
 export function ArchiveForm() {
-  const [title, setTitle] = useState(''); // State for title
-  const [location, setLocation] = useState(''); // State for location
-  const [Year, setYear] = useState(''); // State for Year
-  const [supportedBy, setSupportedBy] = useState('');
-  const [team, setTeam] = useState('');
-  const [imageUrl, setImageUrl] = useState('');
-  const [lead, setLead] = useState('');
+  const [title, setTitle] = useState('');
+  const [location, setLocation] = useState('');
+  const [assets, setAssets] = useState('');
+  const [material, setMaterial] = useState('');
   const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    if (!title || !location || !Year || !imageUrl) {
+    if (!title || !location || !assets || !material) {
       alert('Please fill in all fields');
       return;
     }
 
     setLoading(true);
     try {
-      const docData = { title, location, Year: parseInt(Year,10), supportedBy, team, imageUrl, lead };
+      const docData = { title, location, assets, material };
       await firebaseController.addArchive1Entry(docData);
       alert('Entry successfully added!');
       fetchArchiveData();
@@ -71,44 +68,21 @@ export function ArchiveForm() {
       />
       <TextField
         fullWidth
-        name="Year"
-        label="Year"
-        value={Year}
-        onChange={(e) => setYear(e.target.value)}
+        name="assets"
+        label="Assets"
+        value={assets}
+        onChange={(e) => setAssets(e.target.value)}
         sx={{ mb: 3 }}
       />
       <TextField
         fullWidth
-        name="supportedBy"
-        label="Supported By"
-        value={supportedBy}
-        onChange={(e) => setSupportedBy(e.target.value)}
+        name="material"
+        label="Material"
+        value={material}
+        onChange={(e) => setMaterial(e.target.value)}
         sx={{ mb: 3 }}
       />
-      <TextField
-        fullWidth
-        name="projectlead"
-        label="Project Lead"
-        value={lead}
-        onChange={(e) => setLead(e.target.value)}
-        sx={{ mb: 3 }}
-      />
-      <TextField
-        fullWidth
-        name="team"
-        label="Set Team"
-        value={team}
-        onChange={(e) => setTeam(e.target.value)}
-        sx={{ mb: 3 }}
-      />
-      <TextField
-        fullWidth
-        name="image"
-        label="Enter Image Url"
-        value={imageUrl}
-        onChange={(e) => setImageUrl(e.target.value)}
-        sx={{ mb: 3 }}
-      />
+
       <LoadingButton
         fullWidth
         size="large"

@@ -17,6 +17,10 @@ export function ArchiveForm() {
   const [record, setRecord] = useState(''); // State for record
   const [imageUrl, setImageUrl] = useState(''); // State for imageUrl
   const [loading, setLoading] = useState(false); // Loading state
+  const [relatedLinks, setRelatedLinks] = useState(''); // State for relatedLinks
+  const [approach, setApproach] = useState(''); // State for approach
+  const [introductoryText, setIntroductoryText] = useState(''); // State for introductoryText
+  const [regionHistory, setRegionHistory] = useState(''); // State for regionHistory
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -63,6 +67,38 @@ export function ArchiveForm() {
       />
       <TextField
         fullWidth
+        name="relatedLinks"
+        label="Related Links"
+        value={relatedLinks}
+        onChange={(e) => setRelatedLinks(e.target.value)}
+        sx={{ mb: 3 }}
+      />
+      <TextField
+        fullWidth
+        name="approach"
+        label="Approach"
+        value={approach}
+        onChange={(e) => setApproach(e.target.value)}
+        sx={{ mb: 3 }}
+      />
+      <TextField
+        fullWidth
+        name="introductoryText"
+        label="Introductory Text"
+        value={introductoryText}
+        onChange={(e) => setIntroductoryText(e.target.value)}
+        sx={{ mb: 3 }}
+      />
+      <TextField
+        fullWidth
+        name="regionHistory"
+        label="Region History"
+        value={regionHistory}
+        onChange={(e) => setRegionHistory(e.target.value)}
+        sx={{ mb: 3 }}
+      />
+      <TextField
+        fullWidth
         name="record"
         label="Record"
         value={record}
@@ -72,7 +108,7 @@ export function ArchiveForm() {
       <TextField
         fullWidth
         name="imageUrl"
-        label="Image URL"
+        label="Image Tags"
         value={imageUrl}
         onChange={(e) => setImageUrl(e.target.value)}
         sx={{ mb: 3 }}

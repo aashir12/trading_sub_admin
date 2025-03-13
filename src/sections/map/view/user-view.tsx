@@ -66,7 +66,7 @@ export function UserView() {
           startIcon={<Iconify icon="mingcute:add-line" />}
           href="/map"
         >
-          New User
+          Add New
         </Button>
       </Box>
 
@@ -100,7 +100,7 @@ export function UserView() {
                   { id: 'longitude', label: 'Longitude' },
                   { id: 'longitude', label: 'Longitude' },
                   { id: 'distance', label: 'Distance' },
-                  { id: 'Options',label:"options" },
+                  { id: 'Options', label: 'options' },
                 ]}
               />
               <TableBody>

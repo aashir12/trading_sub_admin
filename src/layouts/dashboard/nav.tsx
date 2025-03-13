@@ -111,7 +111,7 @@ export function NavContent({ data, slots, sx }: NavContentProps) {
   return (
     <>
       {/* <h1 style={{ color: '#2776E0' }}>Laajverd</h1> */}
-      <div style={{ width: '200px', height: '150px' }}>
+      <div style={{ width: '140px', height: '150px' }}>
         <img src="/lg.png" alt="" />
       </div>
 

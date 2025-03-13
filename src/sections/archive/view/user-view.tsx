@@ -66,7 +66,7 @@ export function UserView() {
           startIcon={<Iconify icon="mingcute:add-line" />}
           href="/archive1"
         >
-          New user
+         Add New
         </Button>
       </Box>
 
@@ -97,10 +97,9 @@ export function UserView() {
                 }
                 headLabel={[
                   { id: 'title', label: 'Title' },
-                  { id: 'lead', label: 'Project Lead' },
-                  { id: 'location', label: 'Location', align: 'center' },
-                  { id: 'supportedBy', label: 'Supported By' },
-                  { id: 'year', label: 'Year' },
+                  { id: 'location', label: 'Location' },
+                  { id: 'assets', label: 'Assets' },
+                  { id: 'material', label: 'Material' },
 
                   { id: 'Options' },
                 ]}

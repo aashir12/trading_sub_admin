@@ -38,7 +38,7 @@ export function NavUpgrade({ sx, ...other }: StackProps) {
         component="img"
         alt="Minimal dashboard"
         src="/lg.png"
-        sx={{ width: 200, my: 2 }}
+        sx={{ width: 140, my: 2 }}
       />
 
       <Button

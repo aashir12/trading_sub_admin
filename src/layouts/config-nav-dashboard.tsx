@@ -15,17 +15,27 @@ export const navData = [
   },
 
   {
-    title: 'Glossary',
-    path: '/glossary-main',
+    title: 'Location',
+    path: '/map-list',
     icon: icon('ic-cart'),
     info: (
       <Label color="error" variant="inverted">
-        +4
+        +2
       </Label>
     ),
   },
   {
     title: 'Archive',
+    path: '/archive-list',
+    icon: icon('ic-cart'),
+    info: (
+      <Label color="error" variant="inverted">
+        +2
+      </Label>
+    ),
+  },
+  {
+    title: 'Archive Mock',
     path: '/user',
     icon: icon('ic-cart'),
     info: (
@@ -35,12 +45,12 @@ export const navData = [
     ),
   },
   {
-    title: 'Map',
-    path: '/map-list',
+    title: 'Glossary',
+    path: '/glossary-main',
     icon: icon('ic-cart'),
     info: (
       <Label color="error" variant="inverted">
-        +2
+        +4
       </Label>
     ),
   },

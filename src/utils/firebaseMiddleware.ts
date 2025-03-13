@@ -21,8 +21,12 @@ const db = getFirestore(app);
 interface ArchiveDocument {
   title: string;
   description: string;
-  record?: string; // Optional field for archive entries
+  record?: string; // Optional field for archive entri  es
   imageUrl?: string; // Optional field for archive entries
+  relatedLinks?: string; // Optional field for archive entries
+  approach?: string; // Optional field for archive entries
+  introductoryText?: string; // Optional field for archive entries
+  regionHistory?: string; // Optional field for archive entries
 }
 
 // Middleware functions for archive
@@ -54,10 +58,8 @@ const fetchArchive1Entries = async () => {
 const addArchive1Entry = async (docData: {
   title: string;
   location: string;
-  Year: number;
-  supportedBy: string;
-  imageUrl: string;
-  team: string;
+  assets: string;
+  material: string;
 }) => {
   try {
     const docRef = await addDoc(collection(db, 'archive1'), docData);
@@ -96,7 +98,12 @@ const fetchGlossaryEntries = async () => {
 };
 
 // Middleware functions for map
-const addMapEntry = async (docData: { title: string; latitude: string; longitude: string; distance: string }) => {
+const addMapEntry = async (docData: {
+  title: string;
+  latitude: string;
+  longitude: string;
+  distance: string;
+}) => {
   try {
     const docRef = await addDoc(collection(db, 'map'), docData); // Use 'map' collection
     console.log('Map entry added with ID:', docRef.id);
@@ -186,11 +193,8 @@ export const firebaseController = {
   addArchive1Entry: async (docData: {
     title: string;
     location: string;
-    Year: number;
-    supportedBy: string;
-    team: string;
-    imageUrl: string;
-    lead: string;
+    assets: string;
+    material: string;
   }) => addArchive1Entry(docData),
   getArchive1Entries: async () => fetchArchive1Entries(), // Fetch archive1 entries
 };
