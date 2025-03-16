@@ -9,23 +9,25 @@ import IconButton from '@mui/material/IconButton';
 import MenuItem, { menuItemClasses } from '@mui/material/MenuItem';
 
 import { Iconify } from 'src/components/iconify';
+import { firebaseController } from 'src/utils/firebaseMiddleware';
 
 // ----------------------------------------------------------------------
 
 export type UserProps = {
+  id: string;
   title: string;
   assets: string;
   material: string;
   location: string;
 };
 
-type UserTableRowProps = {
+type Props = {
   row: UserProps;
   selected: boolean;
-  onSelectRow: () => void;
+  onSelectRow: VoidFunction;
 };
 
-export function UserTableRow({ row, selected, onSelectRow }: UserTableRowProps) {
+export function UserTableRow({ row, selected, onSelectRow }: Props) {
   const [openPopover, setOpenPopover] = useState<HTMLButtonElement | null>(null);
 
   // if (row.status === 'approved') {
@@ -41,6 +43,17 @@ export function UserTableRow({ row, selected, onSelectRow }: UserTableRowProps) 
   const handleClosePopover = useCallback(() => {
     setOpenPopover(null);
   }, []);
+
+  const handleDelete = async () => {
+    try {
+      await firebaseController.deleteArchive1Entry(row.id);
+      console.log('Archive entry deleted successfully');
+      window.location.reload(); // Refresh the page after deletion
+    } catch (error) {
+      console.error('Error deleting entry:', error);
+    }
+    handleClosePopover();
+  };
 
   return (
     <>
@@ -71,29 +84,19 @@ export function UserTableRow({ row, selected, onSelectRow }: UserTableRowProps) 
         onClose={handleClosePopover}
         anchorOrigin={{ vertical: 'top', horizontal: 'left' }}
         transformOrigin={{ vertical: 'top', horizontal: 'right' }}
+        PaperProps={{
+          sx: { width: 140 },
+        }}
       >
-        <MenuList
-          disablePadding
-          sx={{
-            p: 0.5,
-            gap: 0.5,
-            width: 140,
-            display: 'flex',
-            flexDirection: 'column',
-            [`& .${menuItemClasses.root}`]: {
-              px: 1,
-              gap: 2,
-              borderRadius: 0.75,
-              [`&.${menuItemClasses.selected}`]: { bgcolor: 'action.selected' },
-            },
-          }}
-        >
-          <MenuItem onClick={handleClosePopover}>
-            <Iconify icon="solar:pen-bold" />
-            Edit
-          </MenuItem>
-
-          <MenuItem onClick={handleClosePopover} sx={{ color: 'error.main' }}>
+        <MenuList>
+          <MenuItem
+            onClick={handleDelete}
+            sx={{
+              [`&.${menuItemClasses.root}`]: {
+                color: 'error.main',
+              },
+            }}
+          >
             <Iconify icon="solar:trash-bin-trash-bold" />
             Delete
           </MenuItem>

@@ -1,6 +1,14 @@
 import { Label } from 'src/components/label';
 import { SvgColor } from 'src/components/svg-color';
-
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import {
+  faLocationPin,
+  faArchive,
+  faFolder,
+  faGlobe,
+  faTrash,
+} from '@fortawesome/free-solid-svg-icons';
+import { firebaseController } from 'src/utils/firebaseMiddleware';
 // ----------------------------------------------------------------------
 
 const icon = (name: string) => (
@@ -17,7 +25,7 @@ export const navData = [
   {
     title: 'Location',
     path: '/map-list',
-    icon: icon('ic-cart'),
+    icon: <FontAwesomeIcon icon={faLocationPin} />,
     info: (
       <Label color="error" variant="inverted">
         +2
@@ -27,17 +35,30 @@ export const navData = [
   {
     title: 'Archive',
     path: '/archive-list',
-    icon: icon('ic-cart'),
+    icon: <FontAwesomeIcon icon={faArchive} />,
     info: (
       <Label color="error" variant="inverted">
         +2
       </Label>
     ),
+    actions: [
+      {
+        icon: <FontAwesomeIcon icon={faTrash} />,
+        onClick: async (id: string) => {
+          try {
+            await firebaseController.deleteArchiveEntry(id);
+            console.log('Archive entry deleted successfully');
+          } catch (error) {
+            console.error('Error deleting archive entry:', error);
+          }
+        },
+      },
+    ],
   },
   {
     title: 'Archive Mock',
     path: '/user',
-    icon: icon('ic-cart'),
+    icon: <FontAwesomeIcon icon={faFolder} />,
     info: (
       <Label color="error" variant="inverted">
         +1
@@ -47,7 +68,7 @@ export const navData = [
   {
     title: 'Glossary',
     path: '/glossary-main',
-    icon: icon('ic-cart'),
+    icon: <FontAwesomeIcon icon={faGlobe} />,
     info: (
       <Label color="error" variant="inverted">
         +4

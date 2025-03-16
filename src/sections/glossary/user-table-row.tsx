@@ -9,30 +9,24 @@ import IconButton from '@mui/material/IconButton';
 import MenuItem, { menuItemClasses } from '@mui/material/MenuItem';
 
 import { Iconify } from 'src/components/iconify';
+import { firebaseController } from 'src/utils/firebaseMiddleware';
 
 // ----------------------------------------------------------------------
 
 export type UserProps = {
   id: string;
-  name: string;
   title: string;
   description: string;
 };
 
-type UserTableRowProps = {
+type Props = {
   row: UserProps;
   selected: boolean;
-  onSelectRow: () => void;
+  onSelectRow: VoidFunction;
 };
 
-export function UserTableRow({ row, selected, onSelectRow }: UserTableRowProps) {
+export function UserTableRow({ row, selected, onSelectRow }: Props) {
   const [openPopover, setOpenPopover] = useState<HTMLButtonElement | null>(null);
-
-  // if (row.status === 'approved') {
-  //   console.log(row.status);
-  // } else {
-  //   row.status = 'error';
-  // }
 
   const handleOpenPopover = useCallback((event: React.MouseEvent<HTMLButtonElement>) => {
     setOpenPopover(event.currentTarget);
@@ -42,25 +36,25 @@ export function UserTableRow({ row, selected, onSelectRow }: UserTableRowProps) 
     setOpenPopover(null);
   }, []);
 
+  const handleDelete = async () => {
+    try {
+      await firebaseController.deleteGlossaryEntry(row.id);
+      console.log('Glossary entry deleted successfully');
+      window.location.reload(); // Refresh the page after deletion
+    } catch (error) {
+      console.error('Error deleting entry:', error);
+    }
+    handleClosePopover();
+  };
+
   return (
     <>
       <TableRow hover tabIndex={-1} role="checkbox" selected={selected}>
         <TableCell padding="checkbox">
           <Checkbox disableRipple checked={selected} onChange={onSelectRow} />
         </TableCell>
-
         <TableCell>{row.title}</TableCell>
-
         <TableCell>{row.description}</TableCell>
-
-        {/* <TableCell align="center">{row.record}</TableCell> */}
-        {/* 
-        <TableCell>
-          <Label color={(row.status === 'banned' && 'error') || 'success'}>
-            {row.status === 'approved' ? 'Approved' : 'Pending'}
-          </Label>
-        </TableCell> */}
-
         <TableCell align="right">
           <IconButton onClick={handleOpenPopover}>
             <Iconify icon="eva:more-vertical-fill" />
@@ -74,29 +68,19 @@ export function UserTableRow({ row, selected, onSelectRow }: UserTableRowProps) 
         onClose={handleClosePopover}
         anchorOrigin={{ vertical: 'top', horizontal: 'left' }}
         transformOrigin={{ vertical: 'top', horizontal: 'right' }}
+        PaperProps={{
+          sx: { width: 140 },
+        }}
       >
-        <MenuList
-          disablePadding
-          sx={{
-            p: 0.5,
-            gap: 0.5,
-            width: 140,
-            display: 'flex',
-            flexDirection: 'column',
-            [`& .${menuItemClasses.root}`]: {
-              px: 1,
-              gap: 2,
-              borderRadius: 0.75,
-              [`&.${menuItemClasses.selected}`]: { bgcolor: 'action.selected' },
-            },
-          }}
-        >
-          <MenuItem onClick={handleClosePopover}>
-            <Iconify icon="solar:pen-bold" />
-            Edit
-          </MenuItem>
-
-          <MenuItem onClick={handleClosePopover} sx={{ color: 'error.main' }}>
+        <MenuList>
+          <MenuItem
+            onClick={handleDelete}
+            sx={{
+              [`&.${menuItemClasses.root}`]: {
+                color: 'error.main',
+              },
+            }}
+          >
             <Iconify icon="solar:trash-bin-trash-bold" />
             Delete
           </MenuItem>

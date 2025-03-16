@@ -30,7 +30,18 @@ interface ArchiveDocument {
 }
 
 // Middleware functions for archive
-const addArchiveEntry = async (docData: { title: string; record: string; imageUrl: string }) => {
+const addArchiveEntry = async (docData: {
+  title: string;
+  location: string;
+  asset: string;
+  material: string;
+  insight: string;
+  introductoryText: string;
+  regionHistory: string;
+  approach: string;
+  imageUrl: string;
+  relatedLinks: string;
+  }) => {
   try {
     const docRef = await addDoc(collection(db, 'archive'), docData);
     console.log('Archive entry added with ID:', docRef.id);
@@ -60,6 +71,10 @@ const addArchive1Entry = async (docData: {
   location: string;
   assets: string;
   material: string;
+  relatedLinks: string;
+  relatedAssets: string;
+  date: string;
+  supportedBy: string;
 }) => {
   try {
     const docRef = await addDoc(collection(db, 'archive1'), docData);
@@ -99,13 +114,16 @@ const fetchGlossaryEntries = async () => {
 
 // Middleware functions for map
 const addMapEntry = async (docData: {
-  title: string;
-  latitude: string;
+  projectTitle: string;
+  placeName: string;
+  date: string;
+  description: string;
   longitude: string;
-  distance: string;
+  latitude: string;
+  slider: string;
 }) => {
   try {
-    const docRef = await addDoc(collection(db, 'map'), docData); // Use 'map' collection
+    const docRef = await addDoc(collection(db, 'routes'), docData); // Use 'map' collection
     console.log('Map entry added with ID:', docRef.id);
     return docRef.id; // Return the document ID
   } catch (error) {
@@ -116,7 +134,7 @@ const addMapEntry = async (docData: {
 
 const fetchMapEntries = async () => {
   try {
-    const querySnapshot = await getDocs(collection(db, 'map')); // Use 'map' collection
+    const querySnapshot = await getDocs(collection(db, 'routes')); // Use 'map' collection
     return querySnapshot.docs.map((docData) => {
       const data = docData.data(); // Cast to appropriate type if needed
       return { id: docData.id, ...data }; // Include document ID
@@ -160,7 +178,7 @@ const deleteGlossaryEntry = async (id: string) => {
 
 const deleteMapEntry = async (id: string) => {
   try {
-    await deleteDoc(doc(db, 'map', id)); // Delete document by ID
+    await deleteDoc(doc(db, 'routes', id)); // Delete document by ID
     console.log('Map entry deleted with ID:', id);
   } catch (error) {
     console.error('Error deleting map entry:', error);
@@ -171,10 +189,13 @@ const deleteMapEntry = async (id: string) => {
 // Controller functions
 export const firebaseController = {
   addMapEntry: async (docData: {
-    title: string;
-    latitude: string;
+    date: string;
+    description: string;
     longitude: string;
-    distance: string;
+    latitude: string;
+    projectTitle: string;
+    placeName: string;
+    slider: string;
   }) => addMapEntry(docData), // Call the middleware function
   fetchMapEntries: async () => fetchMapEntries(), // Fetch map entries
   deleteMapEntry: async (id: string) => deleteMapEntry(id), // Delete map entry
@@ -184,8 +205,18 @@ export const firebaseController = {
   getGlossaryEntries: async () => fetchGlossaryEntries(), // Fetch glossary entries
   deleteGlossaryEntry: async (id: string) => deleteGlossaryEntry(id), // Delete glossary entry
 
-  addArchiveEntry: async (docData: { title: string; record: string; imageUrl: string }) =>
-    addArchiveEntry(docData), // Call the middleware function
+  addArchiveEntry: async (docData: {
+    title: string;
+    location: string;
+    asset: string;
+    material: string;
+    insight: string;
+    introductoryText: string;
+    regionHistory: string;
+    approach: string;
+    imageUrl: string;
+    relatedLinks: string;
+  }) => addArchiveEntry(docData), // Call the middleware function
   getArchiveEntries: async () => fetchArchive1Entries(), // Fetch archive entries
   deleteArchiveEntry: async (id: string) => deleteArchiveEntry(id), // Delete archive entry
   deleteArchive1Entry: async (id: string) => deleteArchive1Entry(id), // Delete archive entry
@@ -195,6 +226,10 @@ export const firebaseController = {
     location: string;
     assets: string;
     material: string;
+    relatedLinks: string;
+    relatedAssets: string;
+    date: string;
+    supportedBy: string;
   }) => addArchive1Entry(docData),
   getArchive1Entries: async () => fetchArchive1Entries(), // Fetch archive1 entries
 };

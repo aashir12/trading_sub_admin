@@ -14,6 +14,10 @@ export function ArchiveForm() {
   const [assets, setAssets] = useState('');
   const [material, setMaterial] = useState('');
   const [loading, setLoading] = useState(false);
+  const [relatedLinks, setRelatedLinks] = useState('');
+  const [relatedAssets, setRelatedAssets] = useState('');
+  const [date, setDate] = useState('');
+  const [supportedBy, setSupportedBy] = useState('');
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -24,7 +28,7 @@ export function ArchiveForm() {
 
     setLoading(true);
     try {
-      const docData = { title, location, assets, material };
+      const docData = { title, location, assets, material, relatedLinks, relatedAssets, date, supportedBy };
       await firebaseController.addArchive1Entry(docData);
       alert('Entry successfully added!');
       fetchArchiveData();
@@ -69,7 +73,7 @@ export function ArchiveForm() {
       <TextField
         fullWidth
         name="assets"
-        label="Assets"
+        label="Asset Category"
         value={assets}
         onChange={(e) => setAssets(e.target.value)}
         sx={{ mb: 3 }}
@@ -82,7 +86,7 @@ export function ArchiveForm() {
         onChange={(e) => setMaterial(e.target.value)}
         sx={{ mb: 3 }}
       />
-
+     
       <LoadingButton
         fullWidth
         size="large"

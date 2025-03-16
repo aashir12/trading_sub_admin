@@ -32,6 +32,9 @@
     "@emotion/styled": "^11.13.0",
     "@fontsource-variable/dm-sans": "^5.0.7",
     "@fontsource/barlow": "^5.0.14",
+    "@fortawesome/fontawesome-svg-core": "^6.7.2",
+    "@fortawesome/free-solid-svg-icons": "^6.7.2",
+    "@fortawesome/react-fontawesome": "^0.2.2",
     "@iconify/react": "^5.0.2",
     "@mui/lab": "^5.0.0-alpha.173",
     "@mui/material": "^5.16.7",
@@ -45,6 +48,7 @@
     "react-apexcharts": "^1.4.1",
     "react-dom": "^18.3.1",
     "react-helmet-async": "^2.0.5",
+    "react-icons": "^5.5.0",
     "react-router-dom": "^6.26.1",
     "simplebar-react": "^3.2.6"
   },

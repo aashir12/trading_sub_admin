@@ -5,16 +5,18 @@ import Box from '@mui/material/Box';
 import TextField from '@mui/material/TextField';
 import Typography from '@mui/material/Typography';
 import LoadingButton from '@mui/lab/LoadingButton';
-
 import { firebaseController } from '../../utils/firebaseMiddleware'; // Adjust the path as necessary
 
 // Define the type for archive data
 
 // ----------------------------------------------------------------------
 
-export function ArchiveForm() {
+export function   ArchiveForm() {
   const [title, setTitle] = useState(''); // State for title
-  const [record, setRecord] = useState(''); // State for record
+  const [location, setLocation] = useState(''); // State for location
+  const [asset, setAsset] = useState(''); // State for asset
+  const [material, setMaterial] = useState(''); // State for material
+  const [insight, setInsight] = useState(''); // State for insight
   const [imageUrl, setImageUrl] = useState(''); // State for imageUrl
   const [loading, setLoading] = useState(false); // Loading state
   const [relatedLinks, setRelatedLinks] = useState(''); // State for relatedLinks
@@ -24,14 +26,25 @@ export function ArchiveForm() {
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    if (!title || !record || !imageUrl) {
+    if (!title || !imageUrl) {
       alert('Please fill in all fields');
       return;
     }
 
     setLoading(true); // Set loading state
     try {
-      const docData = { title, record, imageUrl };
+      const docData = {
+        title,
+        location,
+        asset,
+        material,
+        insight,
+        introductoryText,
+        regionHistory,
+        approach,
+        imageUrl,
+        relatedLinks,
+      };
       await firebaseController.addArchiveEntry(docData); // Use controller to add entry
       alert('Entry successfully added!');
       fetchArchiveData(); // Fetch data after adding
@@ -67,19 +80,32 @@ export function ArchiveForm() {
       />
       <TextField
         fullWidth
-        name="relatedLinks"
-        label="Related Links"
-        value={relatedLinks}
-        onChange={(e) => setRelatedLinks(e.target.value)}
+        name="location"
+        label="Location"
+        value={location}
+        onChange={(e) => setLocation(e.target.value)}
         sx={{ mb: 3 }}
       />
       <TextField
         fullWidth
-        name="approach"
-        label="Approach"
-        value={approach}
-        onChange={(e) => setApproach(e.target.value)}
+        name="asset"
+        label="Asset Category"
+        value={asset}
+        onChange={(e) => setAsset(e.target.value)}
         sx={{ mb: 3 }}
+      />
+      <TextField
+        label="Material"
+        value={material}
+        onChange={(e) => setMaterial(e.target.value)}
+        sx={{ mb: 3 }}
+      />
+      <TextField
+        fullWidth
+        name="insight"
+        label="In-depth insight"
+        value={insight}
+        onChange={(e) => setInsight(e.target.value)}
       />
       <TextField
         fullWidth
@@ -92,25 +118,43 @@ export function ArchiveForm() {
       <TextField
         fullWidth
         name="regionHistory"
-        label="Region History"
+        label="History in the region"
         value={regionHistory}
         onChange={(e) => setRegionHistory(e.target.value)}
         sx={{ mb: 3 }}
       />
       <TextField
         fullWidth
-        name="record"
-        label="Record"
-        value={record}
-        onChange={(e) => setRecord(e.target.value)}
+        name="insight"
+        label="In-depth insight"
+        value={insight}
+        onChange={(e) => setInsight(e.target.value)}
         sx={{ mb: 3 }}
       />
+
+      <TextField
+        fullWidth
+        name="approach"
+        label="Our Conversation Approach"
+        value={approach}
+        onChange={(e) => setApproach(e.target.value)}
+        sx={{ mb: 3 }}
+      />
+
       <TextField
         fullWidth
         name="imageUrl"
         label="Image Tags"
         value={imageUrl}
         onChange={(e) => setImageUrl(e.target.value)}
+        sx={{ mb: 3 }}
+      />
+      <TextField
+        fullWidth
+        name="relatedLinks"
+        label="Related Links"
+        value={relatedLinks}
+        onChange={(e) => setRelatedLinks(e.target.value)}
         sx={{ mb: 3 }}
       />
       <LoadingButton
@@ -129,7 +173,7 @@ export function ArchiveForm() {
   return (
     <>
       <Typography variant="h5" sx={{ mb: 3 }}>
-        Archive Form
+        Archive Detail Form
       </Typography>
       {renderArchiveForm}
     </>

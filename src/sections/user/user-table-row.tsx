@@ -43,11 +43,13 @@ export function UserTableRow({ row, selected, onSelectRow }: UserTableRowProps) 
 
   const handleDelete = async () => {
     try {
-      await firebaseController.deleteArchive1Entry(row.id); // Delete from Firebase
+      await firebaseController.deleteArchiveEntry(row.id);
+      console.log('Archive entry deleted successfully');
+      window.location.reload(); // Refresh the page after deletion
     } catch (error) {
       console.error('Error deleting entry:', error);
     }
-    handleClosePopover(); // Close the popover after deletion
+    handleClosePopover();
   };
 
   return (
@@ -73,29 +75,19 @@ export function UserTableRow({ row, selected, onSelectRow }: UserTableRowProps) 
         onClose={handleClosePopover}
         anchorOrigin={{ vertical: 'top', horizontal: 'left' }}
         transformOrigin={{ vertical: 'top', horizontal: 'right' }}
+        PaperProps={{
+          sx: { width: 140 },
+        }}
       >
-        <MenuList
-          disablePadding
-          sx={{
-            p: 0.5,
-            gap: 0.5,
-            width: 140,
-            display: 'flex',
-            flexDirection: 'column',
-            [`& .${menuItemClasses.root}`]: {
-              px: 1,
-              gap: 2,
-              borderRadius: 0.75,
-              [`&.${menuItemClasses.selected}`]: { bgcolor: 'action.selected' },
-            },
-          }}
-        >
-          <MenuItem onClick={handleClosePopover}>
-            <Iconify icon="solar:pen-bold" />
-            Edit
-          </MenuItem>
-
-          <MenuItem onClick={handleDelete} sx={{ color: 'error.main' }}>
+        <MenuList>
+          <MenuItem
+            onClick={handleDelete}
+            sx={{
+              [`&.${menuItemClasses.root}`]: {
+                color: 'error.main',
+              },
+            }}
+          >
             <Iconify icon="solar:trash-bin-trash-bold" />
             Delete
           </MenuItem>

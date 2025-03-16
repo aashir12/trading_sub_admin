@@ -52,8 +52,6 @@ export function UserView() {
     fetchData(); // Call the fetch function
   }, []);
 
-
-
   return (
     <DashboardContent>
       <Box display="flex" alignItems="center" mb={5}>
@@ -111,10 +109,10 @@ export function UserView() {
                   )
                   .map((row) => (
                     <UserTableRow
-                      key={row.title} // Ensure you have a unique key
+                      key={row.projectTitle}
                       row={row}
-                      selected={table.selected.includes(row.title)}
-                      onSelectRow={() => table.onSelectRow(row.title)}
+                      selected={table.selected.includes(row.projectTitle)}
+                      onSelectRow={() => table.onSelectRow(row.projectTitle)}
                     />
                   ))}
 

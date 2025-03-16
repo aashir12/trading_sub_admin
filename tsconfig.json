@@ -8,6 +8,7 @@
     "allowJs": true,
     "module": "ESNext",
     "jsx": "react-jsx",
+    "types": ["react-icons"],
     "skipLibCheck": true,
     "noImplicitAny": true,
     "noImplicitThis": true,
