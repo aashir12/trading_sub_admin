@@ -401,6 +401,20 @@ const updateUserNotification = async (
   }
 };
 
+const getDepositRequest = async (userId: string) => {
+  try {
+    const depositRef = collection(db, 'users', userId, 'reviewDeposit');
+    const querySnapshot = await getDocs(depositRef);
+    return querySnapshot.docs.map((docData) => ({
+      id: docData.id,
+      ...docData.data(),
+    }));
+  } catch (error) {
+    console.error('Error fetching deposit requests:', error);
+    throw new Error(error.message);
+  }
+};
+
 // Controller functions
 export const firebaseController = {
   fetchUserEntries: async () => fetchUserEntries(),
@@ -471,4 +485,5 @@ export const firebaseController = {
   }) => addArchive1Entry(docData),
   getArchive1Entries: async () => fetchArchive1Entries(),
   getWithdrawlRequest: async (userId: string) => getWithdrawlRequest(userId),
+  getDepositRequest,
 };

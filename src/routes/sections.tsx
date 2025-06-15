@@ -15,6 +15,7 @@ export const BlogPage = lazy(() => import('src/pages/blog'));
 export const UsersPage = lazy(() => import('src/pages/users'));
 export const SignInPage = lazy(() => import('src/pages/sign-in'));
 export const NotificationsPage = lazy(() => import('src/pages/notifications'));
+export const DepositPage = lazy(() => import('src/pages/deposit'));
 export const Page404 = lazy(() => import('src/pages/page-not-found'));
 export const ArchiveForm = lazy(() => import('src/pages/archiveForm'));
 export const GlossaryForm = lazy(() => import('src/pages/glossaryForm'));
@@ -70,6 +71,7 @@ export function Router() {
         { path: 'glossary-main', element: <GlossaryMain /> },
         { path: 'map-list', element: <MapList /> },
         { path: 'archive-list', element: <ArchiveList /> },
+        {path:'deposit',element:<DepositPage/>},
         {
           path: 'withdrawl-requests',
           element: <Withdrawl />,
