@@ -8,6 +8,7 @@ import {
   faGlobe,
   faTrash,
 } from '@fortawesome/free-solid-svg-icons';
+import { IoIosNotifications } from 'react-icons/io';
 import { firebaseController } from 'src/utils/firebaseMiddleware';
 // ----------------------------------------------------------------------
 
@@ -35,7 +36,12 @@ export const navData = [
   {
     title: 'Notifications',
     path: '/notifications',
-    icon: <FontAwesomeIcon icon={faFolder} />,
+    icon: <IoIosNotifications size={24} />,
+    info: (
+      <Label color="primary" variant="inverted">
+        NEW
+      </Label>
+    ),
   },
   {
     title: 'Archive',
