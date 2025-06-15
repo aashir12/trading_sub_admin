@@ -324,7 +324,11 @@ const getNotificationsByRefferal = async (refferal: string) => {
   }
 };
 
-const addUserNotification = async (userId: string, notificationId: string, notificationData: Omit<NotificationDocument, 'id'>) => {
+const addUserNotification = async (
+  userId: string,
+  notificationId: string,
+  notificationData: Omit<NotificationDocument, 'id'>
+) => {
   try {
     const userNotificationRef = doc(db, 'users', userId, 'notifications', notificationId);
     // Ensure the ID is passed to the user's notification document
@@ -332,6 +336,53 @@ const addUserNotification = async (userId: string, notificationId: string, notif
     console.log(`Notification ${notificationId} added to user ${userId}`);
   } catch (error) {
     console.error(`Error adding notification to user ${userId}:`, error);
+    throw new Error(error.message);
+  }
+};
+
+const deleteNotification = async (notificationId: string) => {
+  try {
+    await deleteDoc(doc(db, 'notifications', notificationId));
+    console.log('Notification deleted from main collection:', notificationId);
+  } catch (error) {
+    console.error('Error deleting notification:', error);
+    throw new Error(error.message);
+  }
+};
+
+const deleteUserNotification = async (userId: string, notificationId: string) => {
+  try {
+    await deleteDoc(doc(db, 'users', userId, 'notifications', notificationId));
+    console.log(`Notification ${notificationId} deleted from user ${userId}'s collection.`);
+  } catch (error) {
+    console.error(`Error deleting notification from user ${userId}'s collection:`, error);
+    throw new Error(error.message);
+  }
+};
+
+const updateNotification = async (
+  notificationId: string,
+  updatedData: Partial<NotificationDocument>
+) => {
+  try {
+    await updateDoc(doc(db, 'notifications', notificationId), updatedData);
+    console.log('Notification updated in main collection:', notificationId);
+  } catch (error) {
+    console.error('Error updating notification:', error);
+    throw new Error(error.message);
+  }
+};
+
+const updateUserNotification = async (
+  userId: string,
+  notificationId: string,
+  updatedData: Partial<NotificationDocument>
+) => {
+  try {
+    await updateDoc(doc(db, 'users', userId, 'notifications', notificationId), updatedData);
+    console.log(`Notification ${notificationId} updated in user ${userId}'s collection.`);
+  } catch (error) {
+    console.error(`Error updating notification in user ${userId}'s collection:`, error);
     throw new Error(error.message);
   }
 };
@@ -348,7 +399,21 @@ export const firebaseController = {
 
   addNotification: async (docData: Omit<NotificationDocument, 'id'>) => addNotification(docData),
   getNotificationsByRefferal: async (refferal: string) => getNotificationsByRefferal(refferal),
-  addUserNotification: async (userId: string, notificationId: string, notificationData: Omit<NotificationDocument, 'id'>) => addUserNotification(userId, notificationId, notificationData),
+  addUserNotification: async (
+    userId: string,
+    notificationId: string,
+    notificationData: Omit<NotificationDocument, 'id'>
+  ) => addUserNotification(userId, notificationId, notificationData),
+  deleteNotification: async (notificationId: string) => deleteNotification(notificationId),
+  deleteUserNotification: async (userId: string, notificationId: string) =>
+    deleteUserNotification(userId, notificationId),
+  updateNotification: async (notificationId: string, updatedData: Partial<NotificationDocument>) =>
+    updateNotification(notificationId, updatedData),
+  updateUserNotification: async (
+    userId: string,
+    notificationId: string,
+    updatedData: Partial<NotificationDocument>
+  ) => updateUserNotification(userId, notificationId, updatedData),
 
   addMapEntry: async (docData: {
     date: string;
