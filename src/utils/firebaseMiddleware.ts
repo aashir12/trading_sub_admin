@@ -1,16 +1,26 @@
 import { initializeApp } from 'firebase/app';
-import { doc, addDoc, getDocs, deleteDoc, collection, getFirestore } from 'firebase/firestore';
+import {
+  doc,
+  addDoc,
+  getDocs,
+  deleteDoc,
+  collection,
+  getFirestore,
+  query,
+  where,
+} from 'firebase/firestore';
+
+// TODO: Add SDKs for Firebase products that you want to use
+// https://firebase.google.com/docs/web/setup#available-libraries
 
 // Your web app's Firebase configuration
 const firebaseConfig = {
-  apiKey: 'AIzaSyCjA3GI1FC6_wikAy6qMw8hk4ZXDPsgw1U',
-  authDomain: 'laajverd-42a3f.firebaseapp.com',
-  databaseURL: 'https://laajverd-42a3f-default-rtdb.firebaseio.com',
-  projectId: 'laajverd-42a3f',
-  storageBucket: 'laajverd-42a3f.firebasestorage.app',
-  messagingSenderId: '654657065769',
-  appId: '1:654657065769:web:9cff527bd2a4ec6a9f1d38',
-  measurementId: 'G-ZS0JV6362J',
+  apiKey: 'AIzaSyCOHqtS9_MTJbaBwtrbaF0zOvoMIE1h0FI',
+  authDomain: 'cryptovision-5b03b.firebaseapp.com',
+  projectId: 'cryptovision-5b03b',
+  storageBucket: 'cryptovision-5b03b.firebasestorage.app',
+  messagingSenderId: '103687813293',
+  appId: '1:103687813293:web:85faf9241cb089e3f6ee24',
 };
 
 // Initialize Firebase
@@ -21,7 +31,7 @@ const db = getFirestore(app);
 interface ArchiveDocument {
   title: string;
   description: string;
-  record?: string; // Optional field for archive entri  es
+  record?: string; // Optional field for archive entries
   imageUrl?: string; // Optional field for archive entries
   relatedLinks?: string; // Optional field for archive entries
   approach?: string; // Optional field for archive entries
@@ -29,38 +39,49 @@ interface ArchiveDocument {
   regionHistory?: string; // Optional field for archive entries
 }
 
-// Middleware functions for archive
-const addArchiveEntry = async (docData: {
+interface AdminDocument {
+  name: string;
+  username: string;
+  password: string;
+}
+
+interface Archive1Document {
   title: string;
   location: string;
-  asset: string;
+  assets: string;
   material: string;
-  insight: string;
-  introductoryText: string;
-  regionHistory: string;
-  approach: string;
-  imageUrl: string;
   relatedLinks: string;
-  }) => {
+  relatedAssets: string;
+  date: string;
+  supportedBy: string;
+}
+
+// Middleware functions for archive
+const addAdminEntry = async (docData: {
+  name: string;
+  username: string;
+  password: string;
+  refferal: string;
+}) => {
   try {
-    const docRef = await addDoc(collection(db, 'archive'), docData);
-    console.log('Archive entry added with ID:', docRef.id);
+    const docRef = await addDoc(collection(db, 'sub_admins'), docData);
+    console.log('User entry added with ID:', docRef.id);
     return docRef.id; // Return the document ID
   } catch (error) {
-    console.error('Error adding archive entry:', error);
+    console.error('Error adding user entry:', error);
     throw new Error(error.message);
   }
 };
 
-const fetchArchive1Entries = async () => {
+const fetchAdminEntries = async () => {
   try {
-    const querySnapshot = await getDocs(collection(db, 'archive1'));
+    const querySnapshot = await getDocs(collection(db, 'sub_admins'));
     return querySnapshot.docs.map((docData) => {
       const data = docData.data() as ArchiveDocument; // Cast to ArchiveDocument
       return { id: docData.id, ...data }; // Include document ID
     });
   } catch (error) {
-    console.error('Error fetching archive data:', error);
+    console.error('Error fetching admin data:', error);
     throw new Error(error.message);
   }
 };
@@ -120,7 +141,11 @@ const addMapEntry = async (docData: {
   description: string;
   longitude: string;
   latitude: string;
-  slider: string;
+  assets: string;
+  material: string;
+  archiveLink: string;
+  relatedLink: string;
+  location: string;
 }) => {
   try {
     const docRef = await addDoc(collection(db, 'routes'), docData); // Use 'map' collection
@@ -145,13 +170,66 @@ const fetchMapEntries = async () => {
   }
 };
 
-// Delete functions for all collections
-const deleteArchiveEntry = async (id: string) => {
+const fetchArchive1Entries = async () => {
   try {
-    await deleteDoc(doc(db, 'archive', id)); // Delete document by ID
-    console.log('Archive entry deleted with ID:', id);
+    const querySnapshot = await getDocs(collection(db, 'archive1'));
+    return querySnapshot.docs.map((docData) => {
+      const data = docData.data() as Archive1Document;
+      return { id: docData.id, ...data };
+    });
   } catch (error) {
-    console.error('Error deleting archive entry:', error);
+    console.error('Error fetching archive1 data:', error);
+    throw new Error(error.message);
+  }
+};
+
+// fetch users
+const fetchUserEntries = async () => {
+  try {
+    const querySnapshot = await getDocs(collection(db, 'users')); // Use 'map' collection
+    return querySnapshot.docs.map((docData) => {
+      const data = docData.data(); // Cast to appropriate type if needed
+      return { id: docData.id, ...data }; // Include document ID
+    });
+  } catch (error) {
+    console.error('Error fetching map data:', error);
+    throw new Error(error.message);
+  }
+};
+
+const fetchUsersByRefferal = async (refferal: string) => {
+  try {
+    const usersRef = collection(db, 'users');
+    const q = query(usersRef, where('referral', '==', refferal));
+    const querySnapshot = await getDocs(q);
+    return querySnapshot.docs.map((docData) => {
+      const data = docData.data();
+      return { id: docData.id, ...data };
+    });
+  } catch (error) {
+    console.error('Error fetching users by referral:', error);
+    throw new Error(error.message);
+  }
+};
+
+// Delete functions for all collections
+const deleteUserEntry = async (id: string) => {
+  try {
+    await deleteDoc(doc(db, 'users', id)); // Delete document by ID
+    console.log('Admin entry deleted with ID:', id);
+  } catch (error) {
+    console.error('Error deleting admin entry:', error);
+    throw new Error(error.message);
+  }
+};
+
+// Delete functions for all collections
+const deleteAdminEntry = async (id: string) => {
+  try {
+    await deleteDoc(doc(db, 'sub_admins', id)); // Delete document by ID
+    console.log('Admin entry deleted with ID:', id);
+  } catch (error) {
+    console.error('Error deleting admin entry:', error);
     throw new Error(error.message);
   }
 };
@@ -188,6 +266,10 @@ const deleteMapEntry = async (id: string) => {
 
 // Controller functions
 export const firebaseController = {
+  fetchUserEntries: async () => fetchUserEntries(), // Fetch map entries
+  deleteUserEntry: async (id: string) => deleteUserEntry(id), // Delete map entry
+  fetchUsersByRefferal: async (refferal: string) => fetchUsersByRefferal(refferal),
+
   addMapEntry: async (docData: {
     date: string;
     description: string;
@@ -195,7 +277,11 @@ export const firebaseController = {
     latitude: string;
     projectTitle: string;
     placeName: string;
-    slider: string;
+    assets: string;
+    material: string;
+    archiveLink: string;
+    relatedLink: string;
+    location: string;
   }) => addMapEntry(docData), // Call the middleware function
   fetchMapEntries: async () => fetchMapEntries(), // Fetch map entries
   deleteMapEntry: async (id: string) => deleteMapEntry(id), // Delete map entry
@@ -205,21 +291,14 @@ export const firebaseController = {
   getGlossaryEntries: async () => fetchGlossaryEntries(), // Fetch glossary entries
   deleteGlossaryEntry: async (id: string) => deleteGlossaryEntry(id), // Delete glossary entry
 
-  addArchiveEntry: async (docData: {
-    title: string;
-    location: string;
-    asset: string;
-    material: string;
-    insight: string;
-    introductoryText: string;
-    regionHistory: string;
-    approach: string;
-    imageUrl: string;
-    relatedLinks: string;
-  }) => addArchiveEntry(docData), // Call the middleware function
-  getArchiveEntries: async () => fetchArchive1Entries(), // Fetch archive entries
-  deleteArchiveEntry: async (id: string) => deleteArchiveEntry(id), // Delete archive entry
-  deleteArchive1Entry: async (id: string) => deleteArchive1Entry(id), // Delete archive entry
+  addAdminEntry: async (docData: {
+    name: string;
+    username: string;
+    password: string;
+    refferal: string;
+  }) => addAdminEntry(docData), // Call the middleware function
+  getAdminEntries: async () => fetchAdminEntries(), // Fetch archive entries
+  deleteAdminEntry: async (id: string) => deleteAdminEntry(id), // Delete archive entry
 
   addArchive1Entry: async (docData: {
     title: string;

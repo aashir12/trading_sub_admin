@@ -46,17 +46,17 @@ export const navData = [
         icon: <FontAwesomeIcon icon={faTrash} />,
         onClick: async (id: string) => {
           try {
-            await firebaseController.deleteArchiveEntry(id);
-            console.log('Archive entry deleted successfully');
+            await firebaseController.deleteAdminEntry(id);
+            console.log('User entry deleted successfully');
           } catch (error) {
-            console.error('Error deleting archive entry:', error);
+            console.error('Error deleting user entry:', error);
           }
         },
       },
     ],
   },
   {
-    title: 'Archive Mock',
+    title: 'Users',
     path: '/user',
     icon: <FontAwesomeIcon icon={faFolder} />,
     info: (

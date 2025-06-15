@@ -43,9 +43,22 @@ export function UserView() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const entries = await firebaseController.getArchiveEntries(); // Fetch data from Firebase
-        setData(entries); // Set the fetched data
-        console.log(entries);
+        const adminDataString = localStorage.getItem('adminData');
+        if (adminDataString) {
+          const adminData = JSON.parse(adminDataString);
+          const refferal = adminData.refferal;
+          if (refferal) {
+            const entries = await firebaseController.fetchUsersByRefferal(refferal); // Fetch data from Firebase based on referral
+            setData(entries);
+            console.log(entries);
+          } else {
+            console.error('Referral not found in admin data.');
+            setData([]); // Clear data if no referral is found
+          }
+        } else {
+          console.error('Admin data not found in local storage.');
+          setData([]); // Clear data if no admin data is found
+        }
       } catch (error) {
         console.error('Error fetching data from Firebase:', error);
       }
@@ -96,9 +109,9 @@ export function UserView() {
                   )
                 }
                 headLabel={[
-                  { id: 'title', label: 'Title' },
-                  { id: 'Image url', label: 'imageUrl' },
-                  { id: 'record', label: 'record', align: 'center' },
+                  { id: 'name', label: 'Name' },
+                  { id: 'username', label: 'Username' },
+                  { id: 'password', label: 'Password', align: 'center' },
                   { id: 'Options' },
                 ]}
               />
@@ -110,10 +123,10 @@ export function UserView() {
                   )
                   .map((row) => (
                     <UserTableRow
-                      key={row.title} // Ensure you have a unique key
+                      key={row.name} // Ensure you have a unique key
                       row={row}
-                      selected={table.selected.includes(row.title)} // Use row.imageUrl for selection
-                      onSelectRow={() => table.onSelectRow(row.title)} // Use row.imageUrl for selection
+                      selected={table.selected.includes(row.name)} // Use row.imageUrl for selection
+                      onSelectRow={() => table.onSelectRow(row.name)} // Use row.imageUrl for selection
                     />
                   ))}
 

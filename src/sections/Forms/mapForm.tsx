@@ -19,19 +19,23 @@ export function MapForm() {
   const [latitude, setLatitude] = useState('');
   const [projectTitle, setProjectTitle] = useState('');
   const [placeName, setPlaceName] = useState('');
-  const [slider, setSlider] = useState('');
+  const [assets, setAssets] = useState('');
+  const [material, setMaterial] = useState('');
+  const [location, setLocation] = useState('');
+  const [archiveLink, setArchiveLink] = useState('');
+  const [relatedLink, setRelatedLink] = useState('');
   const [loading, setLoading] = useState(false); // Loading state
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-      if (!date || !description || !longitude || !projectTitle || !placeName || !slider) {
+      if (!date || !description || !longitude || !projectTitle || !placeName) {
       alert('Please fill in all fields');
       return;
     }
 
     setLoading(true); // Set loading state
     try {
-      const docData = { date, description, longitude, latitude, projectTitle, placeName, slider };
+      const docData = { date, description, longitude, latitude, projectTitle, placeName, assets, material, archiveLink, relatedLink, location };
       await firebaseController.addMapEntry(docData); // Use controller to add entry
       alert('Entry successfully added!');
       fetchArchiveData(); // Fetch data after adding
@@ -99,18 +103,50 @@ export function MapForm() {
       />
       <TextField
         fullWidth
-        name="placeName"
-        label="Place Name"
-        value={placeName}
-        onChange={(e) => setPlaceName(e.target.value)}
+        name="assets"
+        label="Assets"
+        value={assets}
+        onChange={(e) => setAssets(e.target.value)}
         sx={{ mb: 3 }}
       />
       <TextField
         fullWidth
-        name="slider"
-        label="Slider"
-        value={slider}
-        onChange={(e) => setSlider(e.target.value)}
+        name="material"
+        label="Material"
+        value={material}
+        onChange={(e) => setMaterial(e.target.value)}
+        sx={{ mb: 3 }}
+      />
+      <TextField
+        fullWidth
+        name="location"
+        label="Location"
+        value={location}
+        onChange={(e) => setLocation(e.target.value)}
+        sx={{ mb: 3 }}
+      />
+      <TextField
+        fullWidth
+        name="archiveLink"
+        label="Archive Link"
+        value={archiveLink}
+        onChange={(e) => setArchiveLink(e.target.value)}
+        sx={{ mb: 3 }}
+      />
+      <TextField
+        fullWidth
+        name="relatedLink"
+        label="Related Link"
+        value={relatedLink}
+        onChange={(e) => setRelatedLink(e.target.value)}
+        sx={{ mb: 3 }}
+      />
+      <TextField
+        fullWidth
+        name="placeName"
+        label="Place Name"
+        value={placeName}
+        onChange={(e) => setPlaceName(e.target.value)}
         sx={{ mb: 3 }}
       />
       <LoadingButton

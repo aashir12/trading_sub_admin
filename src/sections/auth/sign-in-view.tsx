@@ -1,6 +1,6 @@
-import axios from 'axios';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { firebaseController } from 'src/utils/firebaseMiddleware';
 
 import Box from '@mui/material/Box';
 import Link from '@mui/material/Link';
@@ -18,33 +18,47 @@ import { Iconify } from 'src/components/iconify';
 export function SignInView() {
   const navigate = useNavigate();
   const [showPassword, setShowPassword] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
 
-  const handleSignIn = (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSignIn = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    setLoading(true);
+    setError('');
 
-    // Get form data using FormData
-    const formData = new FormData(e.currentTarget);
+    try {
+      const formData = new FormData(e.currentTarget);
+      const username = formData.get('email') as string;
+      const password = formData.get('password') as string;
 
-    const email = formData.get('email');
-    const password = formData.get('password');
+      // Get all admin entries
+      const adminEntries = await firebaseController.getAdminEntries();
 
-    axios
-      .post('https://industrials-backend.vercel.app/api/auth/login', {
-        email,
-        password,
-      })
-      .then((res) => {
-        console.log(res.data.data.token);
-        localStorage.setItem('token', res.data.data.token);
-        navigate('/');
-      });
+      // Find matching admin
+      const admin = adminEntries.find((entry) => entry.username === username);
 
-    console.log({
-      email,
-      password,
-    });
+      if (!admin) {
+        setError('Invalid username or password');
+        setLoading(false);
+        return;
+      }
 
-    // Now you can use these values to make your API call
+      if (admin.password !== password) {
+        setError('Invalid username or password');
+        setLoading(false);
+        return;
+      }
+
+      // Store admin data in localStorage
+      localStorage.setItem('token', admin.id);
+      localStorage.setItem('adminData', JSON.stringify(admin));
+
+      navigate('/');
+    } catch (err) {
+      console.error('Sign in error:', err);
+      setError('An error occurred during sign in');
+    }
+    setLoading(false);
   };
 
   const renderForm = (
@@ -58,23 +72,17 @@ export function SignInView() {
       <TextField
         fullWidth
         name="email"
-        label="Email address"
-        defaultValue="hello@gmail.com"
+        label="Username"
         InputLabelProps={{ shrink: true }}
         sx={{ mb: 3 }}
       />
-
-      <Link variant="body2" color="inherit" sx={{ mb: 1.5 }}>
-        Forgot password?
-      </Link>
 
       <TextField
         fullWidth
         name="password"
         label="Password"
-        defaultValue="@demo1234"
-        InputLabelProps={{ shrink: true }}
         type={showPassword ? 'text' : 'password'}
+        InputLabelProps={{ shrink: true }}
         InputProps={{
           endAdornment: (
             <InputAdornment position="end">
@@ -87,7 +95,20 @@ export function SignInView() {
         sx={{ mb: 3 }}
       />
 
-      <LoadingButton fullWidth size="large" type="submit" color="inherit" variant="contained">
+      {error && (
+        <Typography color="error" variant="body2" sx={{ mb: 2, width: '100%' }}>
+          {error}
+        </Typography>
+      )}
+
+      <LoadingButton
+        fullWidth
+        size="large"
+        type="submit"
+        color="inherit"
+        variant="contained"
+        loading={loading}
+      >
         Sign in
       </LoadingButton>
     </Box>
@@ -97,36 +118,9 @@ export function SignInView() {
     <>
       <Box gap={1.5} display="flex" flexDirection="column" alignItems="center" sx={{ mb: 5 }}>
         <Typography variant="h5">Sign in</Typography>
-        <Typography variant="body2" color="text.secondary">
-          Don’t have an account?
-          <Link variant="subtitle2" sx={{ ml: 0.5 }}>
-            Get started
-          </Link>
-        </Typography>
       </Box>
 
       {renderForm}
-
-      <Divider sx={{ my: 3, '&::before, &::after': { borderTopStyle: 'dashed' } }}>
-        <Typography
-          variant="overline"
-          sx={{ color: 'text.secondary', fontWeight: 'fontWeightMedium' }}
-        >
-          OR
-        </Typography>
-      </Divider>
-
-      <Box gap={1} display="flex" justifyContent="center">
-        <IconButton color="inherit">
-          <Iconify icon="logos:google-icon" />
-        </IconButton>
-        <IconButton color="inherit">
-          <Iconify icon="eva:github-fill" />
-        </IconButton>
-        <IconButton color="inherit">
-          <Iconify icon="ri:twitter-x-fill" />
-        </IconButton>
-      </Box>
     </>
   );
 }
