@@ -25,7 +25,7 @@ export const navData = [
 
   {
     title: 'Withdrawal Requests',
-    path: '/withdrawal-requests',
+    path: '/withdrawl-requests',
     icon: <FontAwesomeIcon icon={faFolder} />,
   },
   {

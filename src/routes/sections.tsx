@@ -22,6 +22,7 @@ export const GlossaryMain = lazy(() => import('src/pages/glossaryMain'));
 export const MapForm = lazy(() => import('src/pages/mapForm'));
 export const MapList = lazy(() => import('src/pages/map'));
 export const Archive = lazy(() => import('src/pages/archive'));
+export const Withdrawl = lazy(() => import('src/pages/withdrawl'));
 export const ArchiveList = lazy(() => import('src/pages/archiveList'));
 
 // ----------------------------------------------------------------------
@@ -70,6 +71,10 @@ export function Router() {
         { path: 'map-list', element: <MapList /> },
         { path: 'archive-list', element: <ArchiveList /> },
         {
+          path: 'withdrawl-requests',
+          element: <Withdrawl />,
+        },
+        {
           path: 'archive1',
           element: (
             <AuthLayout>
@@ -111,6 +116,7 @@ export function Router() {
         </AuthLayout>
       ),
     },
+
     {
       path: '404',
       element: <Page404 />,

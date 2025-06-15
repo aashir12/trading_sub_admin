@@ -309,6 +309,20 @@ const addNotification = async (docData: Omit<NotificationDocument, 'id'>) => {
   }
 };
 
+const getWithdrawlRequest = async (userId: string) => {
+  try {
+    const withdrawRef = collection(db, 'users', userId, 'reviewWithdraw');
+    const querySnapshot = await getDocs(withdrawRef);
+    return querySnapshot.docs.map((docData) => ({
+      id: docData.id,
+      ...docData.data(),
+    }));
+  } catch (error) {
+    console.error('Error fetching withdrawal requests:', error);
+    throw new Error(error.message);
+  }
+};
+
 const getNotificationsByRefferal = async (refferal: string) => {
   try {
     const notificationsRef = collection(db, 'notifications');
@@ -456,4 +470,5 @@ export const firebaseController = {
     supportedBy: string;
   }) => addArchive1Entry(docData),
   getArchive1Entries: async () => fetchArchive1Entries(),
+  getWithdrawlRequest: async (userId: string) => getWithdrawlRequest(userId),
 };
