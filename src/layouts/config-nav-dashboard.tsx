@@ -23,14 +23,19 @@ export const navData = [
   },
 
   {
-    title: 'Location',
-    path: '/map-list',
-    icon: <FontAwesomeIcon icon={faLocationPin} />,
-    info: (
-      <Label color="error" variant="inverted">
-        +2
-      </Label>
-    ),
+    title: 'Withdrawal Requests',
+    path: '/withdrawal-requests',
+    icon: <FontAwesomeIcon icon={faFolder} />,
+  },
+  {
+    title: 'Deposit',
+    path: '/deposit',
+    icon: <FontAwesomeIcon icon={faFolder} />,
+  },
+  {
+    title: 'Notifications',
+    path: '/notifications',
+    icon: <FontAwesomeIcon icon={faFolder} />,
   },
   {
     title: 'Archive',
@@ -62,16 +67,6 @@ export const navData = [
     info: (
       <Label color="error" variant="inverted">
         +1
-      </Label>
-    ),
-  },
-  {
-    title: 'Glossary',
-    path: '/glossary-main',
-    icon: <FontAwesomeIcon icon={faGlobe} />,
-    info: (
-      <Label color="error" variant="inverted">
-        +4
       </Label>
     ),
   },

@@ -71,7 +71,7 @@ export function UserView() {
     <DashboardContent>
       <Box display="flex" alignItems="center" mb={5}>
         <Typography variant="h4" flexGrow={1}>
-          Archive Data
+          Users
         </Typography>
         <Button
           variant="contained"
@@ -110,8 +110,11 @@ export function UserView() {
                 }
                 headLabel={[
                   { id: 'name', label: 'Name' },
-                  { id: 'username', label: 'Username' },
-                  { id: 'password', label: 'Password', align: 'center' },
+                  { id: 'email', label: 'Email' },
+                  { id: 'balance', label: 'Balance', align: 'center' },
+                  { id: 'trade', label: 'Trade', align: 'center' },
+                  { id: 'updateBalance', label: 'Update Balance', align: 'center' },
+
                   { id: 'Options' },
                 ]}
               />

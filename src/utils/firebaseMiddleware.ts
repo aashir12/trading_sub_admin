@@ -8,6 +8,7 @@ import {
   getFirestore,
   query,
   where,
+  updateDoc,
 } from 'firebase/firestore';
 
 // TODO: Add SDKs for Firebase products that you want to use
@@ -223,6 +224,28 @@ const deleteUserEntry = async (id: string) => {
   }
 };
 
+const updateUserBalance = async (userId: string, newBalance: number) => {
+  try {
+    const balanceDocRef = doc(db, 'users', userId, 'balance', 'main');
+    await updateDoc(balanceDocRef, { availableBalance: newBalance });
+    console.log('User balance updated successfully for user:', userId);
+  } catch (error) {
+    console.error('Error updating user balance:', error);
+    throw new Error(error.message);
+  }
+};
+
+const updateUserFreezeBalance = async (userId: string, frozenAmount: number) => {
+  try {
+    const balanceDocRef = doc(db, 'users', userId, 'balance', 'main');
+    await updateDoc(balanceDocRef, { frozenBalance: frozenAmount });
+    console.log('User frozen balance updated successfully for user:', userId, 'to', frozenAmount);
+  } catch (error) {
+    console.error('Error updating user frozen balance:', error);
+    throw new Error(error.message);
+  }
+};
+
 // Delete functions for all collections
 const deleteAdminEntry = async (id: string) => {
   try {
@@ -269,6 +292,10 @@ export const firebaseController = {
   fetchUserEntries: async () => fetchUserEntries(), // Fetch map entries
   deleteUserEntry: async (id: string) => deleteUserEntry(id), // Delete map entry
   fetchUsersByRefferal: async (refferal: string) => fetchUsersByRefferal(refferal),
+  updateUserBalance: async (userId: string, newBalance: number) =>
+    updateUserBalance(userId, newBalance),
+  updateUserFreezeBalance: async (userId: string, frozenAmount: number) =>
+    updateUserFreezeBalance(userId, frozenAmount),
 
   addMapEntry: async (docData: {
     date: string;

@@ -24,6 +24,9 @@ export type UserProps = {
   name: string;
   email: string;
   referrals: object;
+  withdrawalRequests?: number;
+  deposit?: number;
+  notifications?: string;
 };
 
 type UserTableRowProps = {
@@ -37,6 +40,9 @@ export function UserTableRow({ row, selected, onSelectRow }: UserTableRowProps) 
   const [balance, setBalance] = useState<number>(0);
   const [trades, setTrades] = useState<any[]>([]);
   const [tradesModalOpen, setTradesModalOpen] = useState(false);
+  const [updateBalanceModalOpen, setUpdateBalanceModalOpen] = useState(false);
+  const [newBalance, setNewBalance] = useState<number>(0);
+  const [frozenAmount, setFrozenAmount] = useState<number>(0);
 
   useEffect(() => {
     const fetchBalance = async () => {
@@ -45,7 +51,12 @@ export function UserTableRow({ row, selected, onSelectRow }: UserTableRowProps) 
         const balanceDocRef = doc(db, 'users', row.id, 'balance', 'main');
         const balanceDoc = await getDoc(balanceDocRef);
         if (balanceDoc.exists()) {
-          setBalance(Number(balanceDoc.data().availableBalance) || 0);
+          const currentBalanceData = balanceDoc.data();
+          const currentBalance = Number(currentBalanceData.availableBalance) || 0;
+          const currentFrozenAmount = Number(currentBalanceData.frozenBalance) || 0;
+          setBalance(currentBalance);
+          setNewBalance(currentBalance);
+          setFrozenAmount(currentFrozenAmount);
         }
       } catch (error) {
         console.error('Error fetching balance:', error);
@@ -83,7 +94,7 @@ export function UserTableRow({ row, selected, onSelectRow }: UserTableRowProps) 
     try {
       await firebaseController.deleteUserEntry(row.id);
       console.log('User entry deleted successfully');
-      window.location.reload(); // Refresh the page after deletion
+      window.location.reload();
     } catch (error) {
       console.error('Error deleting entry:', error);
     }
@@ -92,6 +103,22 @@ export function UserTableRow({ row, selected, onSelectRow }: UserTableRowProps) 
 
   const handleOpenTradesModal = () => setTradesModalOpen(true);
   const handleCloseTradesModal = () => setTradesModalOpen(false);
+
+  const handleOpenUpdateBalanceModal = () => setUpdateBalanceModalOpen(true);
+  const handleCloseUpdateBalanceModal = () => setUpdateBalanceModalOpen(false);
+
+  const handleUpdateBalance = async () => {
+    try {
+      await firebaseController.updateUserBalance(row.id, newBalance);
+      await firebaseController.updateUserFreezeBalance(row.id, frozenAmount);
+      setBalance(newBalance);
+      handleCloseUpdateBalanceModal();
+      alert('Balance updated successfully!');
+    } catch (error) {
+      console.error('Error updating balance:', error);
+      alert('Failed to update balance.');
+    }
+  };
 
   return (
     <>
@@ -108,8 +135,14 @@ export function UserTableRow({ row, selected, onSelectRow }: UserTableRowProps) 
             size="small"
             onClick={handleOpenTradesModal}
             disabled={trades.length === 0}
+            sx={{ mr: 1 }}
           >
             View Trades
+          </Button>
+        </TableCell>
+        <TableCell align="center">
+          <Button variant="contained" size="small" onClick={handleOpenUpdateBalanceModal}>
+            Update Balance
           </Button>
         </TableCell>
         <TableCell align="right">
@@ -119,32 +152,9 @@ export function UserTableRow({ row, selected, onSelectRow }: UserTableRowProps) 
         </TableCell>
       </TableRow>
 
-      {/* Trades Modal */}
       <Dialog open={tradesModalOpen} onClose={handleCloseTradesModal} maxWidth="md" fullWidth>
         <DialogTitle>Trades List</DialogTitle>
         <DialogContent dividers>
-          <div style={{ marginBottom: 16 }}>
-            <TextField
-              label="Balance"
-              type="number"
-              size="small"
-              value={balance}
-              onChange={(e) => setBalance(e.target.value)}
-              style={{ marginRight: 8 }}
-            />
-            <Button
-              variant="contained"
-              size="small"
-              onClick={async () => {
-                const db = getFirestore();
-                const balanceDocRef = doc(db, 'users', row.id, 'balance', 'main');
-                await updateDoc(balanceDocRef, { availableBalance: Number(balance) });
-                // Optionally show a success message
-              }}
-            >
-              Save
-            </Button>
-          </div>
           {trades.length === 0 ? (
             <div>No trades found.</div>
           ) : (
@@ -172,11 +182,9 @@ export function UserTableRow({ row, selected, onSelectRow }: UserTableRowProps) 
                         size="small"
                         onChange={async (e) => {
                           const newStatus = e.target.value;
-                          // Update Firestore
                           const db = getFirestore();
-                          const contractDocRef = doc(db, 'users', row.id, 'contracts', trade.id); // trade.id must be the doc id!
+                          const contractDocRef = doc(db, 'users', row.id, 'contracts', trade.id);
                           await updateDoc(contractDocRef, { status: newStatus });
-                          // Update local state
                           setTrades((prev) =>
                             prev.map((t, i) => (i === idx ? { ...t, status: newStatus } : t))
                           );
@@ -204,6 +212,38 @@ export function UserTableRow({ row, selected, onSelectRow }: UserTableRowProps) 
         </DialogContent>
         <DialogActions>
           <Button onClick={handleCloseTradesModal}>Close</Button>
+        </DialogActions>
+      </Dialog>
+
+      <Dialog
+        open={updateBalanceModalOpen}
+        onClose={handleCloseUpdateBalanceModal}
+        maxWidth="xs"
+        fullWidth
+      >
+        <DialogTitle>Update User Balance</DialogTitle>
+        <DialogContent dividers>
+          <TextField
+            label="New Balance"
+            type="number"
+            fullWidth
+            value={newBalance}
+            onChange={(e) => setNewBalance(Number(e.target.value))}
+            sx={{ mb: 2 }}
+          />
+          <TextField
+            label="Frozen Amount"
+            type="number"
+            fullWidth
+            value={frozenAmount}
+            onChange={(e) => setFrozenAmount(Number(e.target.value))}
+          />
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleCloseUpdateBalanceModal}>Cancel</Button>
+          <Button onClick={handleUpdateBalance} variant="contained" color="primary">
+            Save
+          </Button>
         </DialogActions>
       </Dialog>
 
