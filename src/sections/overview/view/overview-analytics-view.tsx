@@ -1,5 +1,12 @@
 import Grid from '@mui/material/Unstable_Grid2';
 import Typography from '@mui/material/Typography';
+import { useState, useEffect } from 'react';
+import TextField from '@mui/material/TextField';
+import Button from '@mui/material/Button';
+import ContentCopyIcon from '@mui/icons-material/ContentCopy';
+import { getFirestore, doc, getDoc } from 'firebase/firestore';
+import Card from '@mui/material/Card';
+import Box from '@mui/material/Box';
 
 import { _tasks, _posts, _timeline } from 'src/_mock';
 import { DashboardContent } from 'src/layouts/dashboard';
@@ -17,16 +24,106 @@ import { AnalyticsConversionRates } from '../analytics-conversion-rates';
 // ----------------------------------------------------------------------
 
 export function OverviewAnalyticsView() {
+  const [referral, setReferral] = useState('');
+  const [loading, setLoading] = useState(true);
+  const [copied, setCopied] = useState(false);
+  useEffect(() => {
+    async function fetchReferral() {
+      setLoading(true);
+      try {
+        const localStorageData = localStorage.getItem('adminData') || '';
+        const jsonParsedData = JSON.parse(localStorageData);
+        console.log(`localstorage  data = ${jsonParsedData.refferal}`);
+
+        if (localStorageData) {
+          setReferral(jsonParsedData.refferal || '');
+        }
+      } catch (error) {
+        setReferral('');
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchReferral();
+  }, []);
+  const handleCopy = async () => {
+    if (!referral) return;
+    try {
+      if (navigator.clipboard && window.isSecureContext) {
+        await navigator.clipboard.writeText(referral);
+      } else {
+        // Fallback for older browsers and some mobile browsers
+        const textArea = document.createElement('textarea');
+        textArea.value = referral;
+        // Avoid scrolling to bottom
+        textArea.style.position = 'fixed';
+        textArea.style.top = '0';
+        textArea.style.left = '0';
+        textArea.style.width = '2em';
+        textArea.style.height = '2em';
+        textArea.style.padding = '0';
+        textArea.style.border = 'none';
+        textArea.style.outline = 'none';
+        textArea.style.boxShadow = 'none';
+        textArea.style.background = 'transparent';
+        document.body.appendChild(textArea);
+        textArea.focus();
+        textArea.select();
+        document.execCommand('copy');
+        document.body.removeChild(textArea);
+      }
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1500);
+    } catch (err) {
+      setCopied(false);
+      alert('Failed to copy referral code. Please copy it manually.');
+    }
+  };
+
   return (
     <DashboardContent maxWidth="xl">
       <Typography variant="h4" sx={{ mb: { xs: 3, md: 5 } }}>
         Hi, Welcome back 👋
       </Typography>
 
+      {/* Referral Copy Section - Improved Design */}
+      <Box sx={{ display: 'flex', justifyContent: 'center', mb: 4 }}>
+        <Card
+          sx={{
+            p: 3,
+            minWidth: 350,
+            maxWidth: 480,
+            width: '100%',
+            boxShadow: 3,
+            display: 'flex',
+            alignItems: 'center',
+            gap: 2,
+          }}
+        >
+          <TextField
+            label="Your Referral Code"
+            value={loading ? 'Loading...' : referral}
+            InputProps={{ readOnly: true, sx: { fontWeight: 600, letterSpacing: 1 } }}
+            fullWidth
+            sx={{ flex: 1, background: '#f9f9f9', borderRadius: 1 }}
+          />
+          <Button
+            variant={copied ? 'contained' : 'outlined'}
+            color={copied ? 'success' : 'primary'}
+            startIcon={<ContentCopyIcon />}
+            onClick={handleCopy}
+            disabled={loading || !referral}
+            sx={{ minWidth: 110, fontWeight: 600, ml: 2 }}
+          >
+            {copied ? 'Copied!' : 'Copy'}
+          </Button>
+        </Card>
+      </Box>
+
       <Grid container spacing={3}>
         <Grid xs={12} sm={6} md={3}>
           <AnalyticsWidgetSummary
-            title="Archive"
+            title="New Visitors"
             percent={2.6}
             // total={714000}
             icon={<img alt="icon" src="/assets/icons/glass/ic-glass-bag.svg" />}
@@ -39,7 +136,7 @@ export function OverviewAnalyticsView() {
 
         <Grid xs={12} sm={6} md={3}>
           <AnalyticsWidgetSummary
-            title="Glossary"
+            title="Users"
             percent={-0.1}
             // total={0}
             color="secondary"
@@ -53,7 +150,7 @@ export function OverviewAnalyticsView() {
 
         <Grid xs={12} sm={6} md={3}>
           <AnalyticsWidgetSummary
-            title="Location"
+            title="Sale"
             percent={2.8}
             // total={0}
             color="warning"
