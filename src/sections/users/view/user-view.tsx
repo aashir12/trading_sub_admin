@@ -34,10 +34,17 @@ export function UserView() {
   const [highlightedUsers, setHighlightedUsers] = useState<{ [userId: string]: boolean }>({});
   const [notificationUsers, setNotificationUsers] = useState<{ [userId: string]: boolean }>({});
 
-  const dataFiltered: UserProps[] = applyFilter({
+  let dataFiltered: UserProps[] = applyFilter({
     inputData: data, // Use the fetched data directly
     comparator: getComparator(table.order, table.orderBy),
     filterName,
+  });
+  // Sort so highlighted users are on top
+  dataFiltered = dataFiltered.sort((a, b) => {
+    const aHighlighted = !!highlightedUsers[a.id];
+    const bHighlighted = !!highlightedUsers[b.id];
+    if (aHighlighted === bHighlighted) return 0;
+    return aHighlighted ? -1 : 1;
   });
   console.log(dataFiltered);
 
@@ -73,22 +80,45 @@ export function UserView() {
   // Real-time listeners for trades and contracts
   useEffect(() => {
     const db = getFirestore();
-    // Clean up previous listeners
     const unsubscribes: (() => void)[] = [];
     if (data && data.length > 0) {
       data.forEach((user) => {
-        const tradesQuery = query(collection(db, 'users', user.id, 'trades'));
-        // Trades listener
-        const unsubTrades = onSnapshot(tradesQuery, (snapshot) => {
-          // If any trade has status ACTIVE, show notification and highlight
-          const hasActive = snapshot.docs.some((doc) => doc.data().status === 'ACTIVE');
-          setHighlightedUsers((prev) => ({ ...prev, [user.id]: hasActive }));
-          setNotificationUsers((prev) => ({ ...prev, [user.id]: hasActive }));
+        let tradesPending = 0;
+        let contractsPending = 0;
+
+        // Helper to update highlight/notification state
+        function updateStates() {
+          const totalPendingOrActive = tradesPending + contractsPending;
+          setHighlightedUsers((prev) => ({ ...prev, [user.id]: totalPendingOrActive > 0 }));
+          setNotificationUsers((prev) => ({ ...prev, [user.id]: totalPendingOrActive > 1 }));
+        }
+
+        // Listen to trades
+        const tradesUnsub = onSnapshot(collection(db, 'users', user.id, 'trades'), (snapshot) => {
+          tradesPending = 0;
+          snapshot.forEach((doc) => {
+            const status = doc.data().status;
+            if (status === 'pending' || status === 'ACTIVE') tradesPending += 1;
+          });
+          updateStates();
         });
-        unsubscribes.push(unsubTrades);
+
+        // Listen to contracts
+        const contractsUnsub = onSnapshot(
+          collection(db, 'users', user.id, 'contracts'),
+          (snapshot) => {
+            contractsPending = 0;
+            snapshot.forEach((doc) => {
+              const status = doc.data().status;
+              if (status === 'pending' || status === 'ACTIVE') contractsPending += 1;
+            });
+            updateStates();
+          }
+        );
+
+        unsubscribes.push(tradesUnsub, contractsUnsub);
       });
     }
-    // eslint-disable-next-line arrow-body-style
     return () => {
       unsubscribes.forEach((unsub) => unsub());
     };

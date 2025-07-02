@@ -68,6 +68,9 @@ export function UserTableRow({ row, selected, onSelectRow }: UserTableRowProps) 
   const [tradesModalOpen, setTradesModalOpen] = useState(false);
   const [withdrawalRequests, setWithdrawalRequests] = useState<WithdrawalRequest[]>([]);
   const [expanded, setExpanded] = useState(false);
+  const [rejectionDialogOpen, setRejectionDialogOpen] = useState(false);
+  const [rejectionReason, setRejectionReason] = useState('');
+  const [pendingRejectId, setPendingRejectId] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchBalance = async () => {
@@ -142,12 +145,15 @@ export function UserTableRow({ row, selected, onSelectRow }: UserTableRowProps) 
   const handleCloseTradesModal = () => setTradesModalOpen(false);
 
   const handleStatusChange = async (requestId: string, newStatus: string) => {
+    if (newStatus === 'rejected') {
+      setPendingRejectId(requestId);
+      setRejectionDialogOpen(true);
+      return;
+    }
     try {
       const db = getFirestore();
       const requestRef = doc(db, 'users', row.id, 'reviewWithdraw', requestId);
       await updateDoc(requestRef, { status: newStatus });
-
-      // Update local state
       setWithdrawalRequests((prev) =>
         prev.map((request) =>
           request.id === requestId ? { ...request, status: newStatus } : request
@@ -157,6 +163,34 @@ export function UserTableRow({ row, selected, onSelectRow }: UserTableRowProps) 
       console.error('Error updating withdrawal request status:', error);
       alert('Failed to update status');
     }
+  };
+
+  const handleRejectConfirm = async () => {
+    if (!pendingRejectId || !rejectionReason.trim()) return;
+    try {
+      const db = getFirestore();
+      const requestRef = doc(db, 'users', row.id, 'reviewWithdraw', pendingRejectId);
+      await updateDoc(requestRef, { status: 'rejected', rejectionReason });
+      setWithdrawalRequests((prev) =>
+        prev.map((request) =>
+          request.id === pendingRejectId
+            ? { ...request, status: 'rejected', rejectionReason }
+            : request
+        )
+      );
+      setRejectionDialogOpen(false);
+      setRejectionReason('');
+      setPendingRejectId(null);
+    } catch (error) {
+      console.error('Error updating withdrawal request status:', error);
+      alert('Failed to update status');
+    }
+  };
+
+  const handleRejectCancel = () => {
+    setRejectionDialogOpen(false);
+    setRejectionReason('');
+    setPendingRejectId(null);
   };
 
   // If no withdrawal requests, don't render the row
@@ -307,6 +341,32 @@ export function UserTableRow({ row, selected, onSelectRow }: UserTableRowProps) 
         </DialogContent>
         <DialogActions>
           <Button onClick={handleCloseTradesModal}>Close</Button>
+        </DialogActions>
+      </Dialog>
+
+      <Dialog open={rejectionDialogOpen} onClose={handleRejectCancel} maxWidth="xs" fullWidth>
+        <DialogTitle>Rejection Reason</DialogTitle>
+        <DialogContent dividers>
+          <TextField
+            label="Reason for rejection"
+            value={rejectionReason}
+            onChange={(e) => setRejectionReason(e.target.value)}
+            fullWidth
+            multiline
+            minRows={2}
+            autoFocus
+          />
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleRejectCancel}>Cancel</Button>
+          <Button
+            onClick={handleRejectConfirm}
+            variant="contained"
+            color="error"
+            disabled={!rejectionReason.trim()}
+          >
+            Confirm Rejection
+          </Button>
         </DialogActions>
       </Dialog>
 
