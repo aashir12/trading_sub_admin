@@ -1,5 +1,6 @@
 import { firebaseController } from 'src/utils/firebaseMiddleware'; // Import the firebase controller
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
+import { getFirestore, collection, onSnapshot, query } from 'firebase/firestore';
 
 import Box from '@mui/material/Box';
 import Card from '@mui/material/Card';
@@ -30,6 +31,8 @@ export function UserView() {
   const table = useTable();
   const [data, setData] = useState<any[]>([]);
   const [filterName, setFilterName] = useState('');
+  const [highlightedUsers, setHighlightedUsers] = useState<{ [userId: string]: boolean }>({});
+  const [notificationUsers, setNotificationUsers] = useState<{ [userId: string]: boolean }>({});
 
   const dataFiltered: UserProps[] = applyFilter({
     inputData: data, // Use the fetched data directly
@@ -66,6 +69,30 @@ export function UserView() {
 
     fetchData(); // Call the fetch function
   }, []);
+
+  // Real-time listeners for trades and contracts
+  useEffect(() => {
+    const db = getFirestore();
+    // Clean up previous listeners
+    const unsubscribes: (() => void)[] = [];
+    if (data && data.length > 0) {
+      data.forEach((user) => {
+        const tradesQuery = query(collection(db, 'users', user.id, 'trades'));
+        // Trades listener
+        const unsubTrades = onSnapshot(tradesQuery, (snapshot) => {
+          // If any trade has status ACTIVE, show notification and highlight
+          const hasActive = snapshot.docs.some((doc) => doc.data().status === 'ACTIVE');
+          setHighlightedUsers((prev) => ({ ...prev, [user.id]: hasActive }));
+          setNotificationUsers((prev) => ({ ...prev, [user.id]: hasActive }));
+        });
+        unsubscribes.push(unsubTrades);
+      });
+    }
+    // eslint-disable-next-line arrow-body-style
+    return () => {
+      unsubscribes.forEach((unsub) => unsub());
+    };
+  }, [data]);
 
   return (
     <DashboardContent>
@@ -130,6 +157,8 @@ export function UserView() {
                       row={row}
                       selected={table.selected.includes(row.name)} // Use row.imageUrl for selection
                       onSelectRow={() => table.onSelectRow(row.name)} // Use row.imageUrl for selection
+                      highlighted={!!highlightedUsers[row.id]}
+                      showNotification={!!notificationUsers[row.id]}
                     />
                   ))}
 

@@ -22,6 +22,16 @@ export const navData = [
     path: '/',
     icon: icon('ic-analytics'),
   },
+  {
+    title: 'Users',
+    path: '/user',
+    icon: <FontAwesomeIcon icon={faFolder} />,
+    info: (
+      <Label color="error" variant="inverted">
+        +1
+      </Label>
+    ),
+  },
 
   {
     title: 'Withdrawal Requests',
@@ -66,16 +76,7 @@ export const navData = [
       },
     ],
   },
-  {
-    title: 'Users',
-    path: '/user',
-    icon: <FontAwesomeIcon icon={faFolder} />,
-    info: (
-      <Label color="error" variant="inverted">
-        +1
-      </Label>
-    ),
-  },
+
   {
     title: 'Not found',
     path: '/404',

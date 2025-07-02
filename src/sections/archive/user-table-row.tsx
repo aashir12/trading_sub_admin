@@ -46,7 +46,7 @@ export function UserTableRow({ row, selected, onSelectRow }: Props) {
 
   const handleDelete = async () => {
     try {
-      await firebaseController.deleteArchive1Entry(row.id);
+      // await firebaseController.deleteArchive1Entry(row.id);
       console.log('Archive entry deleted successfully');
       window.location.reload(); // Refresh the page after deletion
     } catch (error) {

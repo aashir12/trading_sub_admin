@@ -88,21 +88,21 @@ export function NotificationsView() {
         // Update existing notification
         await firebaseController.updateNotification(editNotificationId, notificationData);
         const childUsers = await firebaseController.fetchUsersByRefferal(adminRefferal);
-        for (const user of childUsers) {
-          await firebaseController.updateUserNotification(
-            user.id,
-            editNotificationId,
-            notificationData
-          );
-        }
+        await Promise.all(
+          childUsers.map((user) =>
+            firebaseController.updateUserNotification(user.id, editNotificationId, notificationData)
+          )
+        );
         alert('Notification updated successfully!');
       } else {
         // Add new notification
         const notificationId = await firebaseController.addNotification(notificationData);
         const childUsers = await firebaseController.fetchUsersByRefferal(adminRefferal);
-        for (const user of childUsers) {
-          await firebaseController.addUserNotification(user.id, notificationId, notificationData);
-        }
+        await Promise.all(
+          childUsers.map((user) =>
+            firebaseController.addUserNotification(user.id, notificationId, notificationData)
+          )
+        );
         alert('Notification sent successfully!');
       }
 
@@ -143,9 +143,11 @@ export function NotificationsView() {
           // Delete from main collection
           await firebaseController.deleteNotification(notificationId);
           // Delete from all child users' collections
-          for (const user of childUsers) {
-            await firebaseController.deleteUserNotification(user.id, notificationId);
-          }
+          await Promise.all(
+            childUsers.map((user) =>
+              firebaseController.deleteUserNotification(user.id, notificationId)
+            )
+          );
           alert('Notification deleted successfully!');
           fetchNotifications(); // Refresh the list
         } else {

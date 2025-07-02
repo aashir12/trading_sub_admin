@@ -3,8 +3,6 @@ import { useNavigate } from 'react-router-dom';
 import { firebaseController } from 'src/utils/firebaseMiddleware';
 
 import Box from '@mui/material/Box';
-import Link from '@mui/material/Link';
-import Divider from '@mui/material/Divider';
 import TextField from '@mui/material/TextField';
 import IconButton from '@mui/material/IconButton';
 import Typography from '@mui/material/Typography';
@@ -35,7 +33,7 @@ export function SignInView() {
       const adminEntries = await firebaseController.getAdminEntries();
 
       // Find matching admin
-      const admin = adminEntries.find((entry) => entry.username === username);
+      const admin: any = adminEntries.find((entry:any) => entry.username === username);
 
       if (!admin) {
         setError('Invalid username or password');
