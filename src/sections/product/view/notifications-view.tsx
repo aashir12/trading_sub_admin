@@ -21,6 +21,7 @@ import FormControl from '@mui/material/FormControl';
 import IconButton from '@mui/material/IconButton';
 import DeleteIcon from '@mui/icons-material/Delete';
 import EditIcon from '@mui/icons-material/Edit';
+import Autocomplete from '@mui/material/Autocomplete';
 
 import { DashboardContent } from 'src/layouts/dashboard';
 import { firebaseController } from 'src/utils/firebaseMiddleware';
@@ -30,11 +31,16 @@ import { firebaseController } from 'src/utils/firebaseMiddleware';
 export function NotificationsView() {
   const [notificationMessage, setNotificationMessage] = useState('');
   const [notificationType, setNotificationType] = useState('info');
+  const [notificationTitle, setNotificationTitle] = useState('');
+  const [notificationImage, setNotificationImage] = useState('');
   const [notificationsList, setNotificationsList] = useState<any[]>([]);
   const [openDialog, setOpenDialog] = useState(false);
   const [selectedNotification, setSelectedNotification] = useState<any | null>(null);
   const [isEditing, setIsEditing] = useState(false);
   const [editNotificationId, setEditNotificationId] = useState<string | null>(null);
+  const [users, setUsers] = useState<any[]>([]);
+  const [selectedUsers, setSelectedUsers] = useState<any[]>([]);
+  const [allSelected, setAllSelected] = useState<boolean>(true);
 
   const getAdminRefferal = () => {
     const adminDataString = localStorage.getItem('adminData');
@@ -63,9 +69,33 @@ export function NotificationsView() {
     fetchNotifications();
   }, [fetchNotifications]);
 
+  useEffect(() => {
+    const fetchUsers = async () => {
+      const adminRefferal = getAdminRefferal();
+      if (adminRefferal) {
+        const usersList = await firebaseController.fetchUsersByRefferal(adminRefferal);
+        setUsers(usersList);
+        setSelectedUsers(usersList);
+        setAllSelected(true);
+      }
+    };
+    fetchUsers();
+  }, []);
+
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setNotificationImage(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
   const handleSubmitNotification = async () => {
-    if (!notificationMessage || !notificationType) {
-      alert('Please fill in both message and type.');
+    if (!notificationMessage || !notificationType || !notificationTitle) {
+      alert('Please fill in title, message, and type.');
       return;
     }
 
@@ -82,14 +112,21 @@ export function NotificationsView() {
         type: notificationType,
         refferal: adminRefferal,
         createdAt: new Date(),
+        image: notificationImage,
+        title: notificationTitle,
       };
+
+      let targetUsers = allSelected ? users : selectedUsers;
+      if (targetUsers.length === 0) {
+        alert('Please select at least one user.');
+        return;
+      }
 
       if (isEditing && editNotificationId) {
         // Update existing notification
         await firebaseController.updateNotification(editNotificationId, notificationData);
-        const childUsers = await firebaseController.fetchUsersByRefferal(adminRefferal);
         await Promise.all(
-          childUsers.map((user) =>
+          targetUsers.map((user: any) =>
             firebaseController.updateUserNotification(user.id, editNotificationId, notificationData)
           )
         );
@@ -97,9 +134,8 @@ export function NotificationsView() {
       } else {
         // Add new notification
         const notificationId = await firebaseController.addNotification(notificationData);
-        const childUsers = await firebaseController.fetchUsersByRefferal(adminRefferal);
         await Promise.all(
-          childUsers.map((user) =>
+          targetUsers.map((user: any) =>
             firebaseController.addUserNotification(user.id, notificationId, notificationData)
           )
         );
@@ -108,8 +144,12 @@ export function NotificationsView() {
 
       setNotificationMessage('');
       setNotificationType('info');
+      setNotificationTitle('');
+      setNotificationImage('');
       setIsEditing(false);
       setEditNotificationId(null);
+      setSelectedUsers(users);
+      setAllSelected(true);
       fetchNotifications();
     } catch (error) {
       console.error('Error processing notification:', error);
@@ -130,6 +170,8 @@ export function NotificationsView() {
   const handleEditNotification = (notification: any) => {
     setNotificationMessage(notification.message);
     setNotificationType(notification.type || 'info');
+    setNotificationTitle(notification.title || '');
+    setNotificationImage(notification.image || '');
     setIsEditing(true);
     setEditNotificationId(notification.id);
   };
@@ -172,6 +214,13 @@ export function NotificationsView() {
         </Typography>
         <TextField
           fullWidth
+          label="Notification Title"
+          value={notificationTitle}
+          onChange={(e) => setNotificationTitle(e.target.value)}
+          sx={{ mb: 2 }}
+        />
+        <TextField
+          fullWidth
           label="Notification Message"
           multiline
           rows={4}
@@ -179,7 +228,19 @@ export function NotificationsView() {
           onChange={(e) => setNotificationMessage(e.target.value)}
           sx={{ mb: 2 }}
         />
-
+        <Button variant="outlined" component="label" sx={{ mb: 2 }}>
+          {notificationImage ? 'Change Image' : 'Upload Image'}
+          <input type="file" accept="image/*" hidden onChange={handleImageChange} />
+        </Button>
+        {notificationImage && (
+          <Box sx={{ mb: 2 }}>
+            <img
+              src={notificationImage}
+              alt="Notification"
+              style={{ maxWidth: 200, maxHeight: 100 }}
+            />
+          </Box>
+        )}
         <FormControl fullWidth sx={{ mb: 2 }}>
           <InputLabel id="notification-type-label">Notification Type</InputLabel>
           <Select
@@ -195,10 +256,36 @@ export function NotificationsView() {
             <MenuItem value="success">Success</MenuItem>
           </Select>
         </FormControl>
-
-        <Button variant="contained" onClick={handleSubmitNotification}>
-          {isEditing ? 'Update Notification' : 'Send Notification'}
-        </Button>
+        <Autocomplete
+          multiple
+          options={users}
+          getOptionLabel={(option) => option.name || option.email || option.id}
+          value={allSelected ? users : selectedUsers}
+          onChange={(_, value) => {
+            setSelectedUsers(value);
+            setAllSelected(value.length === users.length);
+          }}
+          renderInput={(params) => (
+            <TextField {...params} label="Select Users" placeholder="Users" />
+          )}
+          disableCloseOnSelect
+          sx={{ mb: 2 }}
+        />
+        <Stack direction="row" spacing={2} sx={{ mb: 2 }}>
+          <Button
+            size="small"
+            variant={allSelected ? 'contained' : 'outlined'}
+            onClick={() => {
+              setSelectedUsers(users);
+              setAllSelected(true);
+            }}
+          >
+            Select All Users
+          </Button>
+          <Button variant="contained" onClick={handleSubmitNotification}>
+            {isEditing ? 'Update Notification' : 'Send Notification'}
+          </Button>
+        </Stack>
         {isEditing && (
           <Button
             variant="outlined"
@@ -207,6 +294,8 @@ export function NotificationsView() {
               setEditNotificationId(null);
               setNotificationMessage('');
               setNotificationType('info');
+              setNotificationTitle('');
+              setNotificationImage('');
             }}
             sx={{ ml: 2 }}
           >
@@ -256,8 +345,29 @@ export function NotificationsView() {
                   }
                 >
                   <ListItemText
-                    primary={notification.message}
-                    secondary={`Type: ${notification.type || 'N/A'} | Created At: ${notification.createdAt.seconds ? new Date(notification.createdAt.seconds * 1000).toLocaleString() : 'N/A'}`}
+                    primary={notification.title || notification.message}
+                    secondary={
+                      <>
+                        {notification.image && (
+                          <img
+                            src={notification.image}
+                            alt="Notification"
+                            style={{
+                              maxWidth: 100,
+                              maxHeight: 50,
+                              display: 'block',
+                              marginBottom: 4,
+                            }}
+                          />
+                        )}
+                        {notification.message}
+                        <br />
+                        Type: {notification.type || 'N/A'} | Created At:{' '}
+                        {notification.createdAt.seconds
+                          ? new Date(notification.createdAt.seconds * 1000).toLocaleString()
+                          : 'N/A'}
+                      </>
+                    }
                   />
                 </ListItem>
                 <Divider />
@@ -268,8 +378,17 @@ export function NotificationsView() {
       </Card>
 
       <Dialog open={openDialog} onClose={handleCloseDialog} maxWidth="sm" fullWidth>
-        <DialogTitle>{selectedNotification?.message}</DialogTitle>
+        <DialogTitle>{selectedNotification?.title || selectedNotification?.message}</DialogTitle>
         <DialogContent dividers>
+          {selectedNotification?.image && (
+            <Box sx={{ mb: 2 }}>
+              <img
+                src={selectedNotification.image}
+                alt="Notification"
+                style={{ maxWidth: 200, maxHeight: 100 }}
+              />
+            </Box>
+          )}
           <Typography variant="body1">{selectedNotification?.message}</Typography>
           <Typography variant="caption" display="block" sx={{ mt: 2, color: 'text.secondary' }}>
             Type: {selectedNotification?.type || 'N/A'} | Read:{' '}

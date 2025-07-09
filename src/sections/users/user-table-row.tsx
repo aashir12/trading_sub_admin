@@ -310,14 +310,6 @@ export function UserTableRow({
           >
             View Contracts
           </Button>
-          <Button
-            variant="outlined"
-            size="small"
-            onClick={handleOpenTradesAside}
-            disabled={tradesList.length === 0}
-          >
-            View Trades
-          </Button>
         </TableCell>
         <TableCell align="center">
           <Button variant="contained" size="small" onClick={handleOpenUpdateBalanceModal}>
