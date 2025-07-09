@@ -417,6 +417,73 @@ const getDepositRequest = async (userId: string) => {
   }
 };
 
+// Support Ticket Types
+export interface SupportTicket {
+  id?: string;
+  userEmail: string;
+  subject: string;
+  message: string;
+  status: string;
+  createdAt: any; // Firestore Timestamp or Date
+}
+
+// Fetch all support tickets, with optional status filter and search
+const fetchSupportTickets = async (options?: {
+  status?: string;
+  search?: string;
+}): Promise<SupportTicket[]> => {
+  try {
+    let q: any = collection(db, 'support_tickets');
+    const constraints: any[] = [];
+    if (options?.status) {
+      constraints.push(where('status', '==', options.status));
+    }
+    if (options?.search) {
+      // Search by userEmail or subject (case-insensitive)
+      // Firestore does not support OR queries, so fetch all and filter in JS
+      const querySnapshot = await getDocs(q);
+      const search = options.search ?? '';
+      return querySnapshot.docs
+        .map((docData) => ({ id: docData.id, ...docData.data() }))
+        .filter(
+          (ticket: any) =>
+            ticket.userEmail?.toLowerCase().includes(search.toLowerCase()) ||
+            ticket.subject?.toLowerCase().includes(search.toLowerCase())
+        );
+    }
+    if (constraints.length > 0) {
+      q = query(q, ...constraints);
+    }
+    const querySnapshot = await getDocs(q);
+    return querySnapshot.docs.map((docData) => ({ id: docData.id, ...docData.data() }));
+  } catch (error) {
+    console.error('Error fetching support tickets:', error);
+    throw new Error(error.message);
+  }
+};
+
+// Update support ticket status
+const updateSupportTicketStatus = async (ticketId: string, newStatus: string) => {
+  try {
+    await updateDoc(doc(db, 'support_tickets', ticketId), { status: newStatus });
+    console.log('Support ticket status updated:', ticketId, newStatus);
+  } catch (error) {
+    console.error('Error updating support ticket status:', error);
+    throw new Error(error.message);
+  }
+};
+
+// Delete a support ticket by ID
+const deleteSupportTicket = async (ticketId: string) => {
+  try {
+    await deleteDoc(doc(db, 'support_tickets', ticketId));
+    console.log('Support ticket deleted:', ticketId);
+  } catch (error) {
+    console.error('Error deleting support ticket:', error);
+    throw new Error(error.message);
+  }
+};
+
 // Controller functions
 export const firebaseController = {
   fetchUserEntries: async () => fetchUserEntries(),
@@ -488,4 +555,9 @@ export const firebaseController = {
   getArchive1Entries: async () => fetchArchive1Entries(),
   getWithdrawlRequest: async (userId: string) => getWithdrawlRequest(userId),
   getDepositRequest,
+  fetchSupportTickets: async (options?: { status?: string; search?: string }) =>
+    fetchSupportTickets(options),
+  updateSupportTicketStatus: async (ticketId: string, newStatus: string) =>
+    updateSupportTicketStatus(ticketId, newStatus),
+  deleteSupportTicket: async (ticketId: string) => deleteSupportTicket(ticketId),
 };

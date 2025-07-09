@@ -28,7 +28,7 @@ import { firebaseController } from 'src/utils/firebaseMiddleware';
 
 // ----------------------------------------------------------------------
 
-export function NotificationsView() {
+export function NotificationsView({ preselectedUsers = [] }: { preselectedUsers?: any[] }) {
   const [notificationMessage, setNotificationMessage] = useState('');
   const [notificationType, setNotificationType] = useState('info');
   const [notificationTitle, setNotificationTitle] = useState('');
@@ -75,12 +75,21 @@ export function NotificationsView() {
       if (adminRefferal) {
         const usersList = await firebaseController.fetchUsersByRefferal(adminRefferal);
         setUsers(usersList);
-        setSelectedUsers(usersList);
-        setAllSelected(true);
+        if (preselectedUsers.length > 0) {
+          // Find matching user objects by id/email
+          const selected = usersList.filter((u) =>
+            preselectedUsers.some((sel) => sel.id === u.id || sel.email === u.email)
+          );
+          setSelectedUsers(selected);
+          setAllSelected(selected.length === usersList.length);
+        } else {
+          setSelectedUsers(usersList);
+          setAllSelected(true);
+        }
       }
     };
     fetchUsers();
-  }, []);
+  }, [preselectedUsers]);
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];

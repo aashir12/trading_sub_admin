@@ -7,6 +7,7 @@ import {
   faFolder,
   faGlobe,
   faTrash,
+  faEnvelope,
 } from '@fortawesome/free-solid-svg-icons';
 import { IoIosNotifications } from 'react-icons/io';
 import { firebaseController } from 'src/utils/firebaseMiddleware';
@@ -52,6 +53,11 @@ export const navData = [
         NEW
       </Label>
     ),
+  },
+  {
+    title: 'Support Tickets',
+    path: '/support-tickets',
+    icon: <FontAwesomeIcon icon={faEnvelope} />,
   },
   {
     title: 'Archive',
