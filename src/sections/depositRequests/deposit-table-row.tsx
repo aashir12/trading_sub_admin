@@ -19,6 +19,7 @@ import Collapse from '@mui/material/Collapse';
 import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
 import Paper from '@mui/material/Paper';
+import Divider from '@mui/material/Divider';
 
 import { Iconify } from 'src/components/iconify';
 import { firebaseController } from '../../utils/firebaseMiddleware';
@@ -201,7 +202,7 @@ export function UserTableRow({ row, selected, onSelectRow, requestTab }: UserTab
             {expanded ? 'Hide Requests' : `Show Requests (${filteredDepositRequests.length})`}
           </Button>
         </TableCell>
-        <TableCell align="right"></TableCell>
+        <TableCell align="right" />
       </TableRow>
 
       <TableRow>

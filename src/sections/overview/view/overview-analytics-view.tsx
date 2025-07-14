@@ -11,6 +11,7 @@ import Box from '@mui/material/Box';
 import { _tasks, _posts, _timeline } from 'src/_mock';
 import { DashboardContent } from 'src/layouts/dashboard';
 
+import { firebaseController } from 'src/utils/firebaseMiddleware';
 import { AnalyticsNews } from '../analytics-news';
 import { AnalyticsTasks } from '../analytics-tasks';
 import { AnalyticsCurrentVisits } from '../analytics-current-visits';
@@ -20,7 +21,6 @@ import { AnalyticsWidgetSummary } from '../analytics-widget-summary';
 import { AnalyticsTrafficBySite } from '../analytics-traffic-by-site';
 import { AnalyticsCurrentSubject } from '../analytics-current-subject';
 import { AnalyticsConversionRates } from '../analytics-conversion-rates';
-import { firebaseController } from 'src/utils/firebaseMiddleware';
 
 // ----------------------------------------------------------------------
 
@@ -86,7 +86,7 @@ export function OverviewAnalyticsView() {
           } else if (typeof user.createdAt === 'string' || typeof user.createdAt === 'number') {
             dateObj = new Date(user.createdAt);
           }
-          if (dateObj && !isNaN(dateObj.getTime())) {
+          if (dateObj && !Number.isNaN(dateObj.getTime())) {
             const label = `${dateObj.getFullYear()}-${String(dateObj.getMonth() + 1).padStart(2, '0')}`;
             counts[label] = (counts[label] || 0) + 1;
           }

@@ -1,5 +1,13 @@
 import { useState, useCallback, useEffect } from 'react';
-import { doc, getDoc, getFirestore, collection, getDocs, updateDoc } from 'firebase/firestore';
+import {
+  doc,
+  getDoc,
+  getFirestore,
+  collection,
+  getDocs,
+  updateDoc,
+  onSnapshot,
+} from 'firebase/firestore';
 import { getAuth, sendPasswordResetEmail } from 'firebase/auth';
 
 import Popover from '@mui/material/Popover';
@@ -16,6 +24,8 @@ import DialogActions from '@mui/material/DialogActions';
 import Button from '@mui/material/Button';
 import Select from '@mui/material/Select';
 import TextField from '@mui/material/TextField';
+import Snackbar from '@mui/material/Snackbar';
+import MuiAlert from '@mui/material/Alert';
 
 import { Iconify } from 'src/components/iconify';
 import { FlagIcon } from 'src/components/iconify/flag-icon';
@@ -59,17 +69,13 @@ export function UserTableRow({
   const [isFrozen, setIsFrozen] = useState<boolean>(row.isFrozen ?? false);
   const [tradesList, setTradesList] = useState<any[]>([]);
   const [tradesAsideOpen, setTradesAsideOpen] = useState(false);
-  const [statusDialogOpen, setStatusDialogOpen] = useState(false);
-  const [pendingStatusChange, setPendingStatusChange] = useState<{
-    type: 'contract' | 'trade';
-    idx: number;
-    newStatus: string;
-  } | null>(null);
-  const [changedContracts, setChangedContracts] = useState<{ [id: string]: boolean }>({});
-  const [changedTrades, setChangedTrades] = useState<{ [id: string]: boolean }>({});
   const [creditScore, setCreditScore] = useState<number>(row.creditScore ?? 100);
   const [creditScoreDialogOpen, setCreditScoreDialogOpen] = useState(false);
   const [newCreditScore, setNewCreditScore] = useState<number>(creditScore);
+  // Update snackbar state type to restrict severity
+  const [snackbar, setSnackbar] = useState<{ open: boolean; message: string; severity: 'success' | 'error' }>(
+    { open: false, message: '', severity: 'success' }
+  );
 
   // Auto-set creditScore to 100 if not present in Firestore
   useEffect(() => {
@@ -108,11 +114,6 @@ export function UserTableRow({
           ...(tradeDoc.data() as { [key: string]: any; statusChanged?: boolean }),
         }));
         setTrades(contractsList);
-        const changed: { [id: string]: boolean } = {};
-        contractsList.forEach((trade) => {
-          if (trade.statusChanged) changed[trade.id] = true;
-        });
-        setChangedContracts(changed);
       } catch (error) {
         console.error('Error fetching trades:', error);
       }
@@ -129,11 +130,6 @@ export function UserTableRow({
         }));
         setTradesList(tradesArr);
         console.log('Fetched trades from "trades" collection:', tradesArr);
-        const changed: { [id: string]: boolean } = {};
-        tradesArr.forEach((trade) => {
-          if (trade.statusChanged) changed[trade.id] = true;
-        });
-        setChangedTrades(changed);
       } catch (error) {
         console.error('Error fetching trades from "trades" collection:', error);
       }
@@ -157,8 +153,28 @@ export function UserTableRow({
     fetchTrades();
     fetchIsFrozen();
     fetchTradesCollection();
-    setChangedContracts({});
-    setChangedTrades({});
+  }, [row.id]);
+
+  useEffect(() => {
+    const db = getFirestore();
+    const unsubContracts = onSnapshot(collection(db, 'users', row.id, 'contracts'), (snapshot) => {
+      const contractsList = snapshot.docs.map((tradeDoc) => ({
+        id: tradeDoc.id,
+        ...tradeDoc.data(),
+      }));
+      setTrades(contractsList);
+    });
+    const unsubTrades = onSnapshot(collection(db, 'users', row.id, 'trades'), (snapshot) => {
+      const tradesArr = snapshot.docs.map((tradeDoc) => ({
+        id: tradeDoc.id,
+        ...tradeDoc.data(),
+      }));
+      setTradesList(tradesArr);
+    });
+    return () => {
+      unsubContracts();
+      unsubTrades();
+    };
   }, [row.id]);
 
   const handleOpenPopover = useCallback((event: React.MouseEvent<HTMLButtonElement>) => {
@@ -227,65 +243,6 @@ export function UserTableRow({
       console.error('Error updating freeze status:', error);
       alert('Failed to update freeze status.');
     }
-  };
-
-  const handleStatusChangeRequest = (
-    type: 'contract' | 'trade',
-    idx: number,
-    newStatus: string
-  ) => {
-    setPendingStatusChange({ type, idx, newStatus });
-    setStatusDialogOpen(true);
-  };
-
-  const handleStatusChangeConfirm = async () => {
-    if (!pendingStatusChange) return;
-    const { type, idx, newStatus } = pendingStatusChange;
-    if (type === 'contract') {
-      const trade = trades[idx];
-      const db = getFirestore();
-      const contractDocRef = doc(db, 'users', row.id, 'contracts', trade.id);
-      await updateDoc(contractDocRef, { status: newStatus, statusChanged: true });
-      setTrades((prev) =>
-        prev.map((t, i) => (i === idx ? { ...t, status: newStatus, statusChanged: true } : t))
-      );
-      setChangedContracts((prev) => ({ ...prev, [trade.id]: true }));
-    } else if (type === 'trade') {
-      const trade = tradesList[idx];
-      const db = getFirestore();
-      const tradeDocRef = doc(db, 'users', row.id, 'trades', trade.id);
-      await updateDoc(tradeDocRef, { status: newStatus, statusChanged: true });
-      setTradesList((prev) =>
-        prev.map((t, i) => (i === idx ? { ...t, status: newStatus, statusChanged: true } : t))
-      );
-      setChangedTrades((prev) => ({ ...prev, [trade.id]: true }));
-      if (newStatus === 'WIN') {
-        const winAmount =
-          Number(trade.fromAmount) +
-          (Number(trade.fromAmount) * Number(trade.returnPercentage || 0)) / 100;
-        try {
-          const balanceDocRef = doc(db, 'users', row.id, 'balance', 'main');
-          const balanceDoc = await getDoc(balanceDocRef);
-          let currentBalance = 0;
-          if (balanceDoc.exists()) {
-            const currentBalanceData = balanceDoc.data();
-            currentBalance = Number(currentBalanceData.availableBalance) || 0;
-          }
-          const updatedBalance = currentBalance + winAmount;
-          await updateDoc(balanceDocRef, { availableBalance: updatedBalance });
-          setBalance(updatedBalance);
-        } catch (error) {
-          console.error('Error updating balance for WIN:', error);
-        }
-      }
-    }
-    setStatusDialogOpen(false);
-    setPendingStatusChange(null);
-  };
-
-  const handleStatusChangeCancel = () => {
-    setStatusDialogOpen(false);
-    setPendingStatusChange(null);
   };
 
   // Sort trades by timestamp descending (newest first)
@@ -402,8 +359,48 @@ export function UserTableRow({
                       <Select
                         value={trade.status}
                         size="small"
-                        disabled={!!changedContracts[trade.id]}
-                        onChange={(e) => handleStatusChangeRequest('contract', idx, e.target.value)}
+                        disabled={trade.status !== 'ACTIVE'}
+                        onChange={async (e) => {
+                          const newStatus = e.target.value;
+                          const db = getFirestore();
+                          const contractDocRef = doc(db, 'users', row.id, 'contracts', trade.id);
+                          try {
+                            await updateDoc(contractDocRef, { status: newStatus });
+                            if (newStatus === 'WIN') {
+                              // Update user balance
+                              const amount = Number(trade.amount) || 0;
+                              const returnPercentage = Number(trade.returnPercentage) || 0;
+                              const winAmount = amount + (amount * returnPercentage) / 100;
+                              const balanceDocRef = doc(db, 'users', row.id, 'balance', 'main');
+                              const balanceDoc = await getDoc(balanceDocRef);
+                              let currentBalance = 0;
+                              if (balanceDoc.exists()) {
+                                const currentBalanceData = balanceDoc.data();
+                                currentBalance = Number(currentBalanceData.availableBalance) || 0;
+                              }
+                              const updatedBalance = currentBalance + winAmount;
+                              await updateDoc(balanceDocRef, { availableBalance: updatedBalance });
+                              setSnackbar({
+                                open: true,
+                                message: 'Status and balance updated successfully!',
+                                severity: 'success',
+                              });
+                            } else {
+                              setSnackbar({
+                                open: true,
+                                message: 'Status updated successfully!',
+                                severity: 'success',
+                              });
+                            }
+                          } catch (error) {
+                            setSnackbar({
+                              open: true,
+                              message: 'Failed to update status or balance.',
+                              severity: 'error',
+                            });
+                            console.error('Failed to update status or balance:', error);
+                          }
+                        }}
                       >
                         <MenuItem value="ACTIVE">ACTIVE</MenuItem>
                         <MenuItem value="LOSS">LOSS</MenuItem>
@@ -496,18 +493,7 @@ export function UserTableRow({
                     <td style={{ padding: 8 }}>{trade.toAmount}</td>
                     <td style={{ padding: 8 }}>{trade.tokenPrice}</td>
                     <td style={{ padding: 8 }}>{trade.orderType}</td>
-                    <td style={{ padding: 8 }}>
-                      <Select
-                        value={trade.status}
-                        size="small"
-                        disabled={!!changedTrades[trade.id]}
-                        onChange={(e) => handleStatusChangeRequest('trade', idx, e.target.value)}
-                      >
-                        <MenuItem value="pending">PENDING</MenuItem>
-                        <MenuItem value="WIN">WIN</MenuItem>
-                        <MenuItem value="LOSS">LOSS</MenuItem>
-                      </Select>
-                    </td>
+                    <td style={{ padding: 8 }}>{trade.status}</td>
                     <td style={{ padding: 8 }}>{trade.tradeId}</td>
                     <td style={{ padding: 8 }}>
                       {trade.createdAt && trade.createdAt.seconds
@@ -523,19 +509,6 @@ export function UserTableRow({
         </DialogContent>
         <DialogActions>
           <Button onClick={handleCloseTradesAside}>Close</Button>
-        </DialogActions>
-      </Dialog>
-
-      <Dialog open={statusDialogOpen} onClose={handleStatusChangeCancel} maxWidth="xs" fullWidth>
-        <DialogTitle>Confirm Status Change</DialogTitle>
-        <DialogContent dividers>
-          Are you sure you want to change the status? This action can only be performed once.
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={handleStatusChangeCancel}>Cancel</Button>
-          <Button onClick={handleStatusChangeConfirm} variant="contained" color="primary">
-            Confirm
-          </Button>
         </DialogActions>
       </Dialog>
 
@@ -589,6 +562,22 @@ export function UserTableRow({
           </MenuItem>
         </MenuList>
       </Popover>
+      <Snackbar
+        open={snackbar.open}
+        autoHideDuration={3000}
+        onClose={() => setSnackbar((prev) => ({ ...prev, open: false }))}
+        anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
+      >
+        <MuiAlert
+          onClose={() => setSnackbar((prev) => ({ ...prev, open: false }))}
+          severity={snackbar.severity}
+          elevation={6}
+          variant="filled"
+          sx={{ width: '100%' }}
+        >
+          {snackbar.message}
+        </MuiAlert>
+      </Snackbar>
     </>
   );
 }

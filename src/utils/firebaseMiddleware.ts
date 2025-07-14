@@ -444,18 +444,38 @@ const fetchSupportTickets = async (options?: {
       const querySnapshot = await getDocs(q);
       const search = options.search ?? '';
       return querySnapshot.docs
-        .map((docData) => ({ id: docData.id, ...docData.data() }))
+        .map((docData) => {
+          const data: any = docData.data() || {};
+          return {
+            id: docData.id,
+            userEmail: data.userEmail || '',
+            subject: data.subject || '',
+            message: data.message || '',
+            status: data.status || '',
+            createdAt: data.createdAt || new Date(),
+          };
+        })
         .filter(
-          (ticket: any) =>
-            ticket.userEmail?.toLowerCase().includes(search.toLowerCase()) ||
-            ticket.subject?.toLowerCase().includes(search.toLowerCase())
-        );
+          (ticket) =>
+            ticket.userEmail.toLowerCase().includes(search.toLowerCase()) ||
+            ticket.subject.toLowerCase().includes(search.toLowerCase())
+        ) as SupportTicket[];
     }
     if (constraints.length > 0) {
       q = query(q, ...constraints);
     }
     const querySnapshot = await getDocs(q);
-    return querySnapshot.docs.map((docData) => ({ id: docData.id, ...docData.data() }));
+    return querySnapshot.docs.map((docData) => {
+      const data: any = docData.data() || {};
+      return {
+        id: docData.id,
+        userEmail: data.userEmail || '',
+        subject: data.subject || '',
+        message: data.message || '',
+        status: data.status || '',
+        createdAt: data.createdAt || new Date(),
+      };
+    }) as SupportTicket[];
   } catch (error) {
     console.error('Error fetching support tickets:', error);
     throw new Error(error.message);

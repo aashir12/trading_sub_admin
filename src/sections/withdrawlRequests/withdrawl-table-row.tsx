@@ -231,7 +231,7 @@ export function UserTableRow({ row, selected, onSelectRow, requestTab }: UserTab
             {expanded ? 'Hide Requests' : `Show Requests (${filteredWithdrawalRequests.length})`}
           </Button>
         </TableCell>
-        <TableCell align="right"></TableCell>
+        <TableCell align="right" />
       </TableRow>
 
       <TableRow>

@@ -44,7 +44,7 @@ export function SupportTicketDetailDialog({
         await firebaseController.deleteSupportTicket(ticket.id!);
         // Redirect to notifications and preselect this user
         navigate('/notifications', {
-          state: { preselectedUsers: [{ id: ticket.userId, email: ticket.userEmail }] },
+          state: { preselectedUsers: [{ email: ticket.userEmail }] },
         });
         return;
       }
@@ -97,4 +97,3 @@ export function SupportTicketDetailDialog({
     </Dialog>
   );
 }
- 

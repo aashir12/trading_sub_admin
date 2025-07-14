@@ -77,7 +77,7 @@ export function NotificationsView({ preselectedUsers = [] }: { preselectedUsers?
         setUsers(usersList);
         if (preselectedUsers.length > 0) {
           // Find matching user objects by id/email
-          const selected = usersList.filter((u) =>
+          const selected = usersList.filter((u: any) =>
             preselectedUsers.some((sel) => sel.id === u.id || sel.email === u.email)
           );
           setSelectedUsers(selected);
@@ -125,7 +125,7 @@ export function NotificationsView({ preselectedUsers = [] }: { preselectedUsers?
         title: notificationTitle,
       };
 
-      let targetUsers = allSelected ? users : selectedUsers;
+      const targetUsers = allSelected ? users : selectedUsers;
       if (targetUsers.length === 0) {
         alert('Please select at least one user.');
         return;
