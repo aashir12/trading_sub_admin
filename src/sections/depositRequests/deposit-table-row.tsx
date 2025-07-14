@@ -37,6 +37,7 @@ type UserTableRowProps = {
   row: UserProps;
   selected: boolean;
   onSelectRow: () => void;
+  requestTab: 'pending' | 'closed'; // Add prop for tab selection
 };
 
 type DepositRequest = {
@@ -54,7 +55,7 @@ type DepositRequest = {
   userId: string;
 };
 
-export function UserTableRow({ row, selected, onSelectRow }: UserTableRowProps) {
+export function UserTableRow({ row, selected, onSelectRow, requestTab }: UserTableRowProps) {
   const [openPopover, setOpenPopover] = useState<HTMLButtonElement | null>(null);
   const [balance, setBalance] = useState<number>(0);
   const [frozenAmount, setFrozenAmount] = useState<number>(0);
@@ -165,8 +166,19 @@ export function UserTableRow({ row, selected, onSelectRow }: UserTableRowProps) 
     setSelectedImage('');
   };
 
+  // Filter deposit requests based on selected tab
+  let filteredDepositRequests = depositRequests.filter((request) =>
+    requestTab === 'pending' ? request.status === 'pending' : request.status !== 'pending'
+  );
+  // Sort by createdAt descending (newest first)
+  filteredDepositRequests = filteredDepositRequests.sort((a, b) => {
+    const aTime = a.createdAt?.seconds ? a.createdAt.seconds : 0;
+    const bTime = b.createdAt?.seconds ? b.createdAt.seconds : 0;
+    return bTime - aTime;
+  });
+
   // If no deposit requests, don't render the row
-  if (depositRequests.length === 0) {
+  if (filteredDepositRequests.length === 0) {
     return null;
   }
 
@@ -186,14 +198,10 @@ export function UserTableRow({ row, selected, onSelectRow }: UserTableRowProps) 
             onClick={() => setExpanded(!expanded)}
             sx={{ mr: 1 }}
           >
-            {expanded ? 'Hide Requests' : `Show Requests (${depositRequests.length})`}
+            {expanded ? 'Hide Requests' : `Show Requests (${filteredDepositRequests.length})`}
           </Button>
         </TableCell>
-        <TableCell align="right">
-          <IconButton onClick={handleOpenPopover}>
-            <Iconify icon="eva:more-vertical-fill" />
-          </IconButton>
-        </TableCell>
+        <TableCell align="right"></TableCell>
       </TableRow>
 
       <TableRow>
@@ -213,7 +221,7 @@ export function UserTableRow({ row, selected, onSelectRow }: UserTableRowProps) 
               <Typography variant="h6" gutterBottom component="div">
                 Deposit Requests
               </Typography>
-              {depositRequests.map((request) => (
+              {filteredDepositRequests.map((request) => (
                 <Paper key={request.id} sx={{ p: 2, mb: 2 }}>
                   <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
                     <Typography variant="subtitle1">Request ID: {request.id}</Typography>
@@ -387,30 +395,7 @@ export function UserTableRow({ row, selected, onSelectRow }: UserTableRowProps) 
         </DialogContent>
       </Dialog>
 
-      <Popover
-        open={!!openPopover}
-        anchorEl={openPopover}
-        onClose={handleClosePopover}
-        anchorOrigin={{ vertical: 'top', horizontal: 'left' }}
-        transformOrigin={{ vertical: 'top', horizontal: 'right' }}
-        PaperProps={{
-          sx: { width: 140 },
-        }}
-      >
-        <MenuList>
-          <MenuItem
-            onClick={handleDelete}
-            sx={{
-              [`&.${menuItemClasses.root}`]: {
-                color: 'error.main',
-              },
-            }}
-          >
-            <Iconify icon="solar:trash-bin-trash-bold" />
-            Delete
-          </MenuItem>
-        </MenuList>
-      </Popover>
+      {/* Remove Popover and delete menu from the row UI */}
     </>
   );
 }

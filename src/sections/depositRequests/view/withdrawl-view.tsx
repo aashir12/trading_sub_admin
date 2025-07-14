@@ -9,6 +9,8 @@ import TableBody from '@mui/material/TableBody';
 import Typography from '@mui/material/Typography';
 import TableContainer from '@mui/material/TableContainer';
 import TablePagination from '@mui/material/TablePagination';
+import Tabs from '@mui/material/Tabs';
+import Tab from '@mui/material/Tab';
 
 import { DashboardContent } from 'src/layouts/dashboard';
 
@@ -30,6 +32,7 @@ export function UserView() {
   const table = useTable();
   const [data, setData] = useState<any[]>([]);
   const [filterName, setFilterName] = useState('');
+  const [requestTab, setRequestTab] = useState<'pending' | 'closed'>('pending'); // Add tab state
 
   const dataFiltered: UserProps[] = applyFilter({
     inputData: data, // Use the fetched data directly
@@ -71,8 +74,20 @@ export function UserView() {
     <DashboardContent>
       <Box display="flex" alignItems="center" mb={5}>
         <Typography variant="h4" flexGrow={1}>
-          Withdrawl Requests
+          Deposit Requests
         </Typography>
+      </Box>
+
+      {/* Tab Switcher for Pending/Closed Requests */}
+      <Box sx={{ mb: 2 }}>
+        <Tabs
+          value={requestTab}
+          onChange={(_, v) => setRequestTab(v)}
+          aria-label="Deposit Request Tabs"
+        >
+          <Tab label="Pending Requests" value="pending" />
+          <Tab label="Closed Requests" value="closed" />
+        </Tabs>
       </Box>
 
       <Card>
@@ -106,7 +121,6 @@ export function UserView() {
                   { id: 'balance', label: 'Balance', align: 'center' },
                   { id: 'trade', label: 'Trade', align: 'center' },
                   { id: 'updateBalance', label: 'Update Balance', align: 'center' },
-
                   { id: 'Options' },
                 ]}
               />
@@ -122,6 +136,7 @@ export function UserView() {
                       row={row}
                       selected={table.selected.includes(row.name)} // Use row.imageUrl for selection
                       onSelectRow={() => table.onSelectRow(row.name)} // Use row.imageUrl for selection
+                      requestTab={requestTab} // Pass tab value as prop
                     />
                   ))}
 

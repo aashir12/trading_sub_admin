@@ -60,30 +60,6 @@ export const navData = [
     icon: <FontAwesomeIcon icon={faEnvelope} />,
   },
   {
-    title: 'Archive',
-    path: '/archive-list',
-    icon: <FontAwesomeIcon icon={faArchive} />,
-    info: (
-      <Label color="error" variant="inverted">
-        +2
-      </Label>
-    ),
-    actions: [
-      {
-        icon: <FontAwesomeIcon icon={faTrash} />,
-        onClick: async (id: string) => {
-          try {
-            await firebaseController.deleteAdminEntry(id);
-            console.log('User entry deleted successfully');
-          } catch (error) {
-            console.error('Error deleting user entry:', error);
-          }
-        },
-      },
-    ],
-  },
-
-  {
     title: 'Not found',
     path: '/404',
     icon: icon('ic-disabled'),

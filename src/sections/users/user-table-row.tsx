@@ -1,5 +1,6 @@
 import { useState, useCallback, useEffect } from 'react';
 import { doc, getDoc, getFirestore, collection, getDocs, updateDoc } from 'firebase/firestore';
+import { getAuth, sendPasswordResetEmail } from 'firebase/auth';
 
 import Popover from '@mui/material/Popover';
 import TableRow from '@mui/material/TableRow';
@@ -30,6 +31,7 @@ export type UserProps = {
   notifications?: string;
   isFrozen?: boolean;
   country?: string;
+  creditScore?: number;
 };
 
 type UserTableRowProps = {
@@ -65,6 +67,17 @@ export function UserTableRow({
   } | null>(null);
   const [changedContracts, setChangedContracts] = useState<{ [id: string]: boolean }>({});
   const [changedTrades, setChangedTrades] = useState<{ [id: string]: boolean }>({});
+  const [creditScore, setCreditScore] = useState<number>(row.creditScore ?? 100);
+  const [creditScoreDialogOpen, setCreditScoreDialogOpen] = useState(false);
+  const [newCreditScore, setNewCreditScore] = useState<number>(creditScore);
+
+  // Auto-set creditScore to 100 if not present in Firestore
+  useEffect(() => {
+    if (row.creditScore === undefined) {
+      const db = getFirestore();
+      updateDoc(doc(db, 'users', row.id), { creditScore: 100 });
+    }
+  }, [row.creditScore, row.id]);
 
   useEffect(() => {
     const fetchBalance = async () => {
@@ -175,6 +188,22 @@ export function UserTableRow({
   const handleOpenUpdateBalanceModal = () => setUpdateBalanceModalOpen(true);
   const handleCloseUpdateBalanceModal = () => setUpdateBalanceModalOpen(false);
 
+  const handleOpenCreditScoreDialog = () => {
+    setNewCreditScore(creditScore);
+    setCreditScoreDialogOpen(true);
+  };
+  const handleCloseCreditScoreDialog = () => setCreditScoreDialogOpen(false);
+  const handleSaveCreditScore = async () => {
+    try {
+      const db = getFirestore();
+      await updateDoc(doc(db, 'users', row.id), { creditScore: newCreditScore });
+      setCreditScore(newCreditScore);
+      setCreditScoreDialogOpen(false);
+    } catch (error) {
+      alert('Failed to update credit score');
+    }
+  };
+
   const handleUpdateBalance = async () => {
     try {
       await firebaseController.updateUserBalance(row.id, newBalance);
@@ -259,6 +288,13 @@ export function UserTableRow({
     setPendingStatusChange(null);
   };
 
+  // Sort trades by timestamp descending (newest first)
+  const sortedTrades = [...trades].sort((a, b) => {
+    const aTime = a.timestamp?.seconds ? a.timestamp.seconds : 0;
+    const bTime = b.timestamp?.seconds ? b.timestamp.seconds : 0;
+    return bTime - aTime;
+  });
+
   return (
     <>
       <TableRow
@@ -278,7 +314,7 @@ export function UserTableRow({
         <TableCell sx={{ position: 'relative' }}>
           {row.country && (
             <span style={{ marginRight: 8, verticalAlign: 'middle' }}>
-              <FlagIcon code={row.country} size={20} />
+              <FlagIcon code={row.country} />
             </span>
           )}
           {row.name}
@@ -326,6 +362,11 @@ export function UserTableRow({
             {isFrozen ? 'Unfreeze' : 'Freeze'}
           </Button>
         </TableCell>
+        <TableCell align="center">
+          <Button variant="outlined" size="small" onClick={handleOpenCreditScoreDialog}>
+            Credit Score: {creditScore}
+          </Button>
+        </TableCell>
         <TableCell align="right">
           <IconButton onClick={handleOpenPopover}>
             <Iconify icon="eva:more-vertical-fill" />
@@ -353,7 +394,7 @@ export function UserTableRow({
                 </tr>
               </thead>
               <tbody>
-                {trades.map((trade, idx) => (
+                {sortedTrades.map((trade, idx) => (
                   <tr key={idx}>
                     <td style={{ padding: 8 }}>{trade.coinName}</td>
                     <td style={{ padding: 8 }}>{trade.amount}</td>
@@ -494,6 +535,32 @@ export function UserTableRow({
           <Button onClick={handleStatusChangeCancel}>Cancel</Button>
           <Button onClick={handleStatusChangeConfirm} variant="contained" color="primary">
             Confirm
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      <Dialog
+        open={creditScoreDialogOpen}
+        onClose={handleCloseCreditScoreDialog}
+        maxWidth="xs"
+        fullWidth
+      >
+        <DialogTitle>Update Credit Score</DialogTitle>
+        <DialogContent dividers>
+          <TextField
+            label="Credit Score"
+            type="number"
+            fullWidth
+            value={newCreditScore}
+            onChange={(e) => setNewCreditScore(Number(e.target.value))}
+            inputProps={{ min: 0, max: 1000 }}
+            sx={{ mb: 2 }}
+          />
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleCloseCreditScoreDialog}>Cancel</Button>
+          <Button onClick={handleSaveCreditScore} variant="contained" color="primary">
+            Save
           </Button>
         </DialogActions>
       </Dialog>

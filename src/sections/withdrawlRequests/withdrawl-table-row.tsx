@@ -19,6 +19,8 @@ import Collapse from '@mui/material/Collapse';
 import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
 import Paper from '@mui/material/Paper';
+import Tabs from '@mui/material/Tabs';
+import Tab from '@mui/material/Tab';
 
 import { Iconify } from 'src/components/iconify';
 import { firebaseController } from '../../utils/firebaseMiddleware';
@@ -37,6 +39,7 @@ type UserTableRowProps = {
   row: UserProps;
   selected: boolean;
   onSelectRow: () => void;
+  requestTab: 'pending' | 'closed'; // Add prop for tab selection
 };
 
 type WithdrawalRequest = {
@@ -60,7 +63,7 @@ type WithdrawalRequest = {
   userEmail: string;
 };
 
-export function UserTableRow({ row, selected, onSelectRow }: UserTableRowProps) {
+export function UserTableRow({ row, selected, onSelectRow, requestTab }: UserTableRowProps) {
   const [openPopover, setOpenPopover] = useState<HTMLButtonElement | null>(null);
   const [balance, setBalance] = useState<number>(0);
   const [frozenAmount, setFrozenAmount] = useState<number>(0);
@@ -193,8 +196,19 @@ export function UserTableRow({ row, selected, onSelectRow }: UserTableRowProps) 
     setPendingRejectId(null);
   };
 
+  // Filter withdrawal requests based on selected tab
+  let filteredWithdrawalRequests = withdrawalRequests.filter((request) =>
+    requestTab === 'pending' ? request.status === 'pending' : request.status !== 'pending'
+  );
+  // Sort by createdAt descending (newest first)
+  filteredWithdrawalRequests = filteredWithdrawalRequests.sort((a, b) => {
+    const aTime = a.createdAt?.seconds ? a.createdAt.seconds : 0;
+    const bTime = b.createdAt?.seconds ? b.createdAt.seconds : 0;
+    return bTime - aTime;
+  });
+
   // If no withdrawal requests, don't render the row
-  if (withdrawalRequests.length === 0) {
+  if (filteredWithdrawalRequests.length === 0) {
     return null;
   }
 
@@ -214,14 +228,10 @@ export function UserTableRow({ row, selected, onSelectRow }: UserTableRowProps) 
             onClick={() => setExpanded(!expanded)}
             sx={{ mr: 1 }}
           >
-            {expanded ? 'Hide Requests' : `Show Requests (${withdrawalRequests.length})`}
+            {expanded ? 'Hide Requests' : `Show Requests (${filteredWithdrawalRequests.length})`}
           </Button>
         </TableCell>
-        <TableCell align="right">
-          <IconButton onClick={handleOpenPopover}>
-            <Iconify icon="eva:more-vertical-fill" />
-          </IconButton>
-        </TableCell>
+        <TableCell align="right"></TableCell>
       </TableRow>
 
       <TableRow>
@@ -241,7 +251,7 @@ export function UserTableRow({ row, selected, onSelectRow }: UserTableRowProps) 
               <Typography variant="h6" gutterBottom component="div">
                 Withdrawal Requests
               </Typography>
-              {withdrawalRequests.map((request) => (
+              {filteredWithdrawalRequests.map((request) => (
                 <Paper key={request.id} sx={{ p: 2, mb: 2 }}>
                   <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
                     <Typography variant="subtitle1">Request ID: {request.id}</Typography>
@@ -272,7 +282,7 @@ export function UserTableRow({ row, selected, onSelectRow }: UserTableRowProps) 
                       Additional Info: {request.accountDetails.additionalInfo}
                     </Typography>
                     <Typography>Phone Number: {request.accountDetails.phoneNumber}</Typography>
-                    <Typography>Swift Code: {request.accountDetails.swiftCode}</Typography>
+                    <Typography>IFSC Code: {request.accountDetails.swiftCode}</Typography>
                   </Box>
                 </Paper>
               ))}
@@ -369,31 +379,6 @@ export function UserTableRow({ row, selected, onSelectRow }: UserTableRowProps) 
           </Button>
         </DialogActions>
       </Dialog>
-
-      <Popover
-        open={!!openPopover}
-        anchorEl={openPopover}
-        onClose={handleClosePopover}
-        anchorOrigin={{ vertical: 'top', horizontal: 'left' }}
-        transformOrigin={{ vertical: 'top', horizontal: 'right' }}
-        PaperProps={{
-          sx: { width: 140 },
-        }}
-      >
-        <MenuList>
-          <MenuItem
-            onClick={handleDelete}
-            sx={{
-              [`&.${menuItemClasses.root}`]: {
-                color: 'error.main',
-              },
-            }}
-          >
-            <Iconify icon="solar:trash-bin-trash-bold" />
-            Delete
-          </MenuItem>
-        </MenuList>
-      </Popover>
     </>
   );
 }

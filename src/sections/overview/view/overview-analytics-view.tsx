@@ -20,6 +20,7 @@ import { AnalyticsWidgetSummary } from '../analytics-widget-summary';
 import { AnalyticsTrafficBySite } from '../analytics-traffic-by-site';
 import { AnalyticsCurrentSubject } from '../analytics-current-subject';
 import { AnalyticsConversionRates } from '../analytics-conversion-rates';
+import { firebaseController } from 'src/utils/firebaseMiddleware';
 
 // ----------------------------------------------------------------------
 
@@ -27,6 +28,11 @@ export function OverviewAnalyticsView() {
   const [referral, setReferral] = useState('');
   const [loading, setLoading] = useState(true);
   const [copied, setCopied] = useState(false);
+  const [countryData, setCountryData] = useState<{ label: string; value: number }[]>([]);
+  const [userCreationData, setUserCreationData] = useState<{
+    categories: string[];
+    data: number[];
+  }>({ categories: [], data: [] });
   useEffect(() => {
     async function fetchReferral() {
       setLoading(true);
@@ -45,6 +51,56 @@ export function OverviewAnalyticsView() {
       }
     }
     fetchReferral();
+  }, []);
+
+  useEffect(() => {
+    async function fetchCountryData() {
+      try {
+        const users = await firebaseController.fetchUserEntries();
+        const countryCounts: Record<string, number> = {};
+        users.forEach((user: any) => {
+          const country = user.country || 'Unknown';
+          countryCounts[country] = (countryCounts[country] || 0) + 1;
+        });
+        const data = Object.entries(countryCounts).map(([label, value]) => ({ label, value }));
+        setCountryData(data);
+      } catch (error) {
+        setCountryData([]);
+      }
+    }
+    fetchCountryData();
+  }, []);
+
+  useEffect(() => {
+    async function fetchUserCreationData() {
+      try {
+        const users = await firebaseController.fetchUserEntries();
+        // Assume user.createdAt is a Firestore Timestamp or JS Date
+        const counts: Record<string, number> = {};
+        users.forEach((user: any) => {
+          let dateObj;
+          if (user.createdAt?.toDate) {
+            dateObj = user.createdAt.toDate();
+          } else if (user.createdAt instanceof Date) {
+            dateObj = user.createdAt;
+          } else if (typeof user.createdAt === 'string' || typeof user.createdAt === 'number') {
+            dateObj = new Date(user.createdAt);
+          }
+          if (dateObj && !isNaN(dateObj.getTime())) {
+            const label = `${dateObj.getFullYear()}-${String(dateObj.getMonth() + 1).padStart(2, '0')}`;
+            counts[label] = (counts[label] || 0) + 1;
+          }
+        });
+        // Sort by date
+        const sorted = Object.entries(counts).sort(([a], [b]) => a.localeCompare(b));
+        const categories = sorted.map(([label]) => label);
+        const data = sorted.map(([, value]) => value);
+        setUserCreationData({ categories, data });
+      } catch (error) {
+        setUserCreationData({ categories: [], data: [] });
+      }
+    }
+    fetchUserCreationData();
   }, []);
   const handleCopy = async () => {
     if (!referral) return;
@@ -180,12 +236,7 @@ export function OverviewAnalyticsView() {
           <AnalyticsCurrentVisits
             title="Current visits"
             chart={{
-              series: [
-                { label: 'America', value: 3500 },
-                { label: 'Asia', value: 2500 },
-                { label: 'Europe', value: 1500 },
-                { label: 'Africa', value: 500 },
-              ],
+              series: countryData.length > 0 ? countryData : [{ label: 'No Data', value: 1 }],
             }}
           />
         </Grid>
@@ -193,17 +244,20 @@ export function OverviewAnalyticsView() {
         <Grid xs={12} md={6} lg={8}>
           <AnalyticsWebsiteVisits
             title="Website visits"
-            subheader="(+43%) than last year"
+            subheader="(User signups per month)"
             chart={{
-              categories: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep'],
+              categories:
+                userCreationData.categories.length > 0 ? userCreationData.categories : ['No Data'],
               series: [
-                { name: 'Team A', data: [43, 33, 22, 37, 67, 68, 37, 24, 55] },
-                { name: 'Team B', data: [51, 70, 47, 67, 40, 37, 24, 70, 24] },
+                {
+                  name: 'User Signups',
+                  data: userCreationData.data.length > 0 ? userCreationData.data : [0],
+                },
               ],
             }}
           />
         </Grid>
-
+        {/* 
         <Grid xs={12} md={6} lg={8}>
           <AnalyticsConversionRates
             title="Conversion rates"
@@ -216,9 +270,9 @@ export function OverviewAnalyticsView() {
               ],
             }}
           />
-        </Grid>
+        </Grid> */}
 
-        <Grid xs={12} md={6} lg={4}>
+        {/* <Grid xs={12} md={6} lg={4}>
           <AnalyticsCurrentSubject
             title="Current subject"
             chart={{
@@ -250,11 +304,11 @@ export function OverviewAnalyticsView() {
               { value: 'twitter', label: 'Twitter', total: 443232 },
             ]}
           />
-        </Grid>
+        </Grid> */}
 
-        <Grid xs={12} md={6} lg={8}>
+        {/* <Grid xs={12} md={6} lg={8}>
           <AnalyticsTasks title="Tasks" list={_tasks} />
-        </Grid>
+        </Grid> */}
       </Grid>
     </DashboardContent>
   );
