@@ -16,13 +16,14 @@ import {
 // https://firebase.google.com/docs/web/setup#available-libraries
 
 // Your web app's Firebase configuration
-const firebaseConfig = {
-  apiKey: 'AIzaSyCOHqtS9_MTJbaBwtrbaF0zOvoMIE1h0FI',
-  authDomain: 'cryptovision-5b03b.firebaseapp.com',
-  projectId: 'cryptovision-5b03b',
-  storageBucket: 'cryptovision-5b03b.firebasestorage.app',
-  messagingSenderId: '103687813293',
-  appId: '1:103687813293:web:85faf9241cb089e3f6ee24',
+
+export const firebaseConfig = {
+  apiKey: import.meta.env.VITE_FIREBASE_API_KEY || '',
+  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN || '',
+  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID || '',
+  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET || '',
+  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID || '',
+  appId: import.meta.env.VITE_FIREBASE_APP_ID || '',
 };
 
 // Initialize Firebase

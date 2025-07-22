@@ -171,6 +171,9 @@ export function UserView() {
                   { id: 'balance', label: 'Balance', align: 'center' },
                   { id: 'trade', label: 'Trade', align: 'center' },
                   { id: 'updateBalance', label: 'Update Balance', align: 'center' },
+                  { id: 'updateBalance', label: 'Account Status', align: 'center' },
+                  { id: 'updateBalance', label: 'Credit Score', align: 'center' },
+                  { id: 'updateBalance', label: 'Password', align: 'center' },
 
                   { id: 'Options' },
                 ]}

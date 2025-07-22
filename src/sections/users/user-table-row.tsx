@@ -73,9 +73,15 @@ export function UserTableRow({
   const [creditScoreDialogOpen, setCreditScoreDialogOpen] = useState(false);
   const [newCreditScore, setNewCreditScore] = useState<number>(creditScore);
   // Update snackbar state type to restrict severity
-  const [snackbar, setSnackbar] = useState<{ open: boolean; message: string; severity: 'success' | 'error' }>(
-    { open: false, message: '', severity: 'success' }
-  );
+  const [snackbar, setSnackbar] = useState<{
+    open: boolean;
+    message: string;
+    severity: 'success' | 'error';
+  }>({ open: false, message: '', severity: 'success' });
+  const [passwordDialogOpen, setPasswordDialogOpen] = useState(false);
+  const [password, setPassword] = useState<string | null>(null);
+  const [passwordLoading, setPasswordLoading] = useState(false);
+  const [passwordError, setPasswordError] = useState<string | null>(null);
 
   // Auto-set creditScore to 100 if not present in Firestore
   useEffect(() => {
@@ -245,6 +251,39 @@ export function UserTableRow({
     }
   };
 
+  const handleOpenPasswordDialog = async () => {
+    setPasswordDialogOpen(true);
+    setPassword(null);
+    setPasswordError(null);
+    setPasswordLoading(true);
+    try {
+      const db = getFirestore();
+      const userDocRef = doc(db, 'users', row.id);
+      const userDoc = await getDoc(userDocRef);
+      if (userDoc.exists()) {
+        const userData = userDoc.data();
+        if (userData && userData.pass) {
+          setPassword(userData.pass);
+        } else {
+          setPasswordError('Password not found.');
+        }
+      } else {
+        setPasswordError('User not found.');
+      }
+    } catch (error) {
+      setPasswordError('Failed to fetch password.');
+    } finally {
+      setPasswordLoading(false);
+    }
+  };
+
+  const handleClosePasswordDialog = () => {
+    setPasswordDialogOpen(false);
+    setPassword(null);
+    setPasswordError(null);
+    setPasswordLoading(false);
+  };
+
   // Sort trades by timestamp descending (newest first)
   const sortedTrades = [...trades].sort((a, b) => {
     const aTime = a.timestamp?.seconds ? a.timestamp.seconds : 0;
@@ -259,18 +298,19 @@ export function UserTableRow({
         tabIndex={-1}
         role="checkbox"
         selected={selected}
-        sx={
-          highlighted
+        sx={{
+          ...(highlighted
             ? { backgroundColor: '#fff3cd !important', transition: 'background 0.3s' }
-            : {}
-        }
+            : {}),
+          minHeight: 32, // reduce row height
+        }}
       >
-        <TableCell padding="checkbox">
-          <Checkbox disableRipple checked={selected} onChange={onSelectRow} />
+        <TableCell padding="checkbox" sx={{ py: 0.5 }}>
+          <Checkbox disableRipple checked={selected} onChange={onSelectRow} size="small" />
         </TableCell>
-        <TableCell sx={{ position: 'relative' }}>
+        <TableCell sx={{ position: 'relative', py: 0.5, fontSize: 13, minWidth: 80 }}>
           {row.country && (
-            <span style={{ marginRight: 8, verticalAlign: 'middle' }}>
+            <span style={{ marginRight: 4, verticalAlign: 'middle' }}>
               <FlagIcon code={row.country} />
             </span>
           )}
@@ -279,10 +319,10 @@ export function UserTableRow({
             <span
               style={{
                 position: 'absolute',
-                top: 8,
-                right: -10,
-                width: 10,
-                height: 10,
+                top: 4,
+                right: -6,
+                width: 8,
+                height: 8,
                 background: '#d32f2f',
                 borderRadius: '50%',
                 display: 'inline-block',
@@ -291,41 +331,65 @@ export function UserTableRow({
             />
           )}
         </TableCell>
-        <TableCell>{row.email}</TableCell>
-        <TableCell align="center">{Number(balance).toFixed(2)}</TableCell>
-        <TableCell align="center">
+        <TableCell sx={{ py: 0.5, fontSize: 13, minWidth: 120 }}>{row.email}</TableCell>
+        <TableCell align="center" sx={{ py: 0.5, fontSize: 13, minWidth: 60 }}>
+          {Number(balance).toFixed(2)}
+        </TableCell>
+        <TableCell align="center" sx={{ py: 0.5, minWidth: 90 }}>
           <Button
             variant="outlined"
             size="small"
             onClick={handleOpenTradesModal}
             disabled={trades.length === 0}
-            sx={{ mr: 1 }}
+            sx={{ mr: 0.5, px: 1, py: 0.2, fontSize: 12, minWidth: 0 }}
           >
-            View Contracts
+            View
           </Button>
         </TableCell>
-        <TableCell align="center">
-          <Button variant="contained" size="small" onClick={handleOpenUpdateBalanceModal}>
-            Update Balance
+        <TableCell align="center" sx={{ py: 0.5, minWidth: 90 }}>
+          <Button
+            variant="contained"
+            size="small"
+            onClick={handleOpenUpdateBalanceModal}
+            sx={{ px: 1, py: 0.2, fontSize: 12, minWidth: 0 }}
+          >
+            Balance
           </Button>
         </TableCell>
-        <TableCell align="center">
+        <TableCell align="center" sx={{ py: 0.5, minWidth: 90 }}>
           <Button
             variant={isFrozen ? 'outlined' : 'contained'}
             color={isFrozen ? 'warning' : 'success'}
             size="small"
             onClick={handleToggleFreeze}
+            sx={{ px: 1, py: 0.2, fontSize: 12, minWidth: 0 }}
           >
             {isFrozen ? 'Unfreeze' : 'Freeze'}
           </Button>
         </TableCell>
-        <TableCell align="center">
-          <Button variant="outlined" size="small" onClick={handleOpenCreditScoreDialog}>
-            Credit Score: {creditScore}
+        <TableCell align="center" sx={{ py: 0.5, minWidth: 110 }}>
+          <Button
+            variant="outlined"
+            size="small"
+            onClick={handleOpenCreditScoreDialog}
+            sx={{ px: 1, py: 0.2, fontSize: 12, minWidth: 0 }}
+          >
+            Credit: {creditScore}
           </Button>
         </TableCell>
-        <TableCell align="right">
-          <IconButton onClick={handleOpenPopover}>
+        <TableCell align="center" sx={{ py: 0.5, minWidth: 90 }}>
+          <Button
+            variant="outlined"
+            size="small"
+            color="secondary"
+            onClick={handleOpenPasswordDialog}
+            sx={{ px: 1, py: 0.2, fontSize: 12, minWidth: 0 }}
+          >
+            Password
+          </Button>
+        </TableCell>
+        <TableCell align="right" sx={{ py: 0.5, minWidth: 40 }}>
+          <IconButton onClick={handleOpenPopover} size="small">
             <Iconify icon="eva:more-vertical-fill" />
           </IconButton>
         </TableCell>
@@ -535,6 +599,28 @@ export function UserTableRow({
           <Button onClick={handleSaveCreditScore} variant="contained" color="primary">
             Save
           </Button>
+        </DialogActions>
+      </Dialog>
+
+      <Dialog open={passwordDialogOpen} onClose={handleClosePasswordDialog} maxWidth="xs" fullWidth>
+        <DialogTitle>User Password</DialogTitle>
+        <DialogContent dividers>
+          {passwordLoading ? (
+            <div>Loading...</div>
+          ) : passwordError ? (
+            <div style={{ color: 'red' }}>{passwordError}</div>
+          ) : (
+            <TextField
+              label="Password"
+              type="text"
+              fullWidth
+              value={password || ''}
+              InputProps={{ readOnly: true }}
+            />
+          )}
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleClosePasswordDialog}>Close</Button>
         </DialogActions>
       </Dialog>
 

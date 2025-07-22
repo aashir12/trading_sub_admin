@@ -74,6 +74,9 @@ export function UserTableRow({ row, selected, onSelectRow, requestTab }: UserTab
   const [rejectionDialogOpen, setRejectionDialogOpen] = useState(false);
   const [rejectionReason, setRejectionReason] = useState('');
   const [pendingRejectId, setPendingRejectId] = useState<string | null>(null);
+  const [paymentDetails, setPaymentDetails] = useState<any>(null);
+  const [paymentDialogOpen, setPaymentDialogOpen] = useState(false);
+  const [editPaymentDetails, setEditPaymentDetails] = useState<any>(null);
 
   useEffect(() => {
     const fetchBalance = async () => {
@@ -87,6 +90,9 @@ export function UserTableRow({ row, selected, onSelectRow, requestTab }: UserTab
           const currentFrozenAmount = Number(currentBalanceData.frozenBalance) || 0;
           setBalance(currentBalance);
           setFrozenAmount(currentFrozenAmount);
+          if (currentBalanceData.paymentDetails) {
+            setPaymentDetails(currentBalanceData.paymentDetails);
+          }
         }
       } catch (error) {
         console.error('Error fetching balance:', error);
@@ -196,6 +202,38 @@ export function UserTableRow({ row, selected, onSelectRow, requestTab }: UserTab
     setPendingRejectId(null);
   };
 
+  const handleOpenPaymentDialog = () => {
+    setEditPaymentDetails(
+      paymentDetails || {
+        accountName: '',
+        accountNumber: '',
+        additionalInfo: '',
+        bankName: '',
+        phoneNumber: '',
+        swiftCode: '',
+      }
+    );
+    setPaymentDialogOpen(true);
+  };
+  const handleClosePaymentDialog = () => {
+    setPaymentDialogOpen(false);
+  };
+  const handlePaymentDetailChange = (field: string, value: string) => {
+    setEditPaymentDetails((prev: any) => ({ ...prev, [field]: value }));
+  };
+  const handleSavePaymentDetails = async () => {
+    try {
+      const db = getFirestore();
+      const balanceDocRef = doc(db, 'users', row.id, 'balance', 'main');
+      await updateDoc(balanceDocRef, { paymentDetails: editPaymentDetails });
+      setPaymentDetails(editPaymentDetails);
+      setPaymentDialogOpen(false);
+    } catch (error) {
+      console.error('Error saving payment details:', error);
+      alert('Failed to save payment details');
+    }
+  };
+
   // Filter withdrawal requests based on selected tab
   let filteredWithdrawalRequests = withdrawalRequests.filter((request) =>
     requestTab === 'pending' ? request.status === 'pending' : request.status !== 'pending'
@@ -222,14 +260,14 @@ export function UserTableRow({ row, selected, onSelectRow, requestTab }: UserTab
         <TableCell>{row.email}</TableCell>
         <TableCell align="center">{Number(balance).toFixed(2)}</TableCell>
         <TableCell align="center">
-          <Button
-            variant="outlined"
-            size="small"
-            onClick={() => setExpanded(!expanded)}
-            sx={{ mr: 1 }}
-          >
-            {expanded ? 'Hide Requests' : `Show Requests (${filteredWithdrawalRequests.length})`}
-          </Button>
+          <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 2 }}>
+            <Button variant="outlined" size="small" onClick={() => setExpanded(!expanded)}>
+              {expanded ? 'Hide Requests' : `Show Requests (${filteredWithdrawalRequests.length})`}
+            </Button>
+            <Button variant="contained" size="small" color="info" onClick={handleOpenPaymentDialog}>
+              Payment Details
+            </Button>
+          </Box>
         </TableCell>
         <TableCell align="right" />
       </TableRow>
@@ -376,6 +414,60 @@ export function UserTableRow({ row, selected, onSelectRow, requestTab }: UserTab
             disabled={!rejectionReason.trim()}
           >
             Confirm Rejection
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      <Dialog open={paymentDialogOpen} onClose={handleClosePaymentDialog} maxWidth="xs" fullWidth>
+        <DialogTitle>Payment Details</DialogTitle>
+        <DialogContent dividers>
+          {editPaymentDetails && (
+            <Box sx={{ display: 'grid', gridTemplateColumns: '1fr', gap: 2 }}>
+              <TextField
+                label="Account Name"
+                value={editPaymentDetails.accountName}
+                onChange={(e) => handlePaymentDetailChange('accountName', e.target.value)}
+                fullWidth
+              />
+              <TextField
+                label="Account Number"
+                value={editPaymentDetails.accountNumber}
+                onChange={(e) => handlePaymentDetailChange('accountNumber', e.target.value)}
+                fullWidth
+              />
+              <TextField
+                label="Bank Name"
+                value={editPaymentDetails.bankName}
+                onChange={(e) => handlePaymentDetailChange('bankName', e.target.value)}
+                fullWidth
+              />
+              <TextField
+                label="Phone Number"
+                value={editPaymentDetails.phoneNumber}
+                onChange={(e) => handlePaymentDetailChange('phoneNumber', e.target.value)}
+                fullWidth
+              />
+              <TextField
+                label="Swift Code"
+                value={editPaymentDetails.swiftCode}
+                onChange={(e) => handlePaymentDetailChange('swiftCode', e.target.value)}
+                fullWidth
+              />
+              <TextField
+                label="Additional Info"
+                value={editPaymentDetails.additionalInfo}
+                onChange={(e) => handlePaymentDetailChange('additionalInfo', e.target.value)}
+                fullWidth
+                multiline
+                minRows={2}
+              />
+            </Box>
+          )}
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleClosePaymentDialog}>Cancel</Button>
+          <Button onClick={handleSavePaymentDetails} variant="contained" color="primary">
+            Save
           </Button>
         </DialogActions>
       </Dialog>
